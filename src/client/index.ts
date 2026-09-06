@@ -3,13 +3,6 @@
  * queue workers) that call a running agent runner over HTTP.
  */
 
-export {
-  AgentRunnerClient,
-  AgentRunnerError,
-  type AgentRunnerClientOptions,
-} from './runner-client';
-export * from '../protocol';
-export type { PlatformId } from '../platform';
 export type {
   AgentPostContent,
   AgentPostFailureStage,
@@ -18,3 +11,10 @@ export type {
   AgentSessionState,
   StorageState,
 } from '../core/types';
+export type { PlatformId } from '../platform';
+export * from '../protocol';
+export {
+  AgentRunnerClient,
+  type AgentRunnerClientOptions,
+  AgentRunnerError,
+} from './runner-client';

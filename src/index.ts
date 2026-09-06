@@ -8,30 +8,28 @@
  * implementations; this package never hard-codes a platform.
  */
 
-export type { PlatformId } from './platform';
-export * from './core/types';
-export { AgentPoster, humanPacingDelay } from './core/poster';
-export { SessionCaptureManager } from './core/capture';
-export { InMemorySessionStore } from './core/stores';
-
-export {
-  LocalBrowserSessionProvider,
-  CdpSessionProvider,
-  attachOverCdp,
-  buildHandle,
-} from './providers/playwright';
-export {
-  SteelSessionProvider,
-  type SteelProviderOptions,
-} from './providers/steel';
-export {
-  KernelSessionProvider,
-  type KernelProviderOptions,
-} from './providers/kernel';
-
-export * from './protocol';
 export {
   AgentRunnerClient,
-  AgentRunnerError,
   type AgentRunnerClientOptions,
+  AgentRunnerError,
 } from './client/runner-client';
+export { SessionCaptureManager } from './core/capture';
+export { AgentPoster, humanPacingDelay } from './core/poster';
+export { InMemorySessionStore } from './core/stores';
+export * from './core/types';
+export type { PlatformId } from './platform';
+export * from './protocol';
+export {
+  type KernelProviderOptions,
+  KernelSessionProvider,
+} from './providers/kernel';
+export {
+  attachOverCdp,
+  buildHandle,
+  CdpSessionProvider,
+  LocalBrowserSessionProvider,
+} from './providers/playwright';
+export {
+  type SteelProviderOptions,
+  SteelSessionProvider,
+} from './providers/steel';

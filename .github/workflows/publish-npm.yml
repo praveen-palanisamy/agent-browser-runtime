@@ -26,12 +26,12 @@ jobs:
   npmjs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version-file: ".node-version"
           registry-url: "https://registry.npmjs.org"
           cache: npm
       - run: npm ci
@@ -58,10 +58,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version-file: ".node-version"
           registry-url: "https://npm.pkg.github.com"
           scope: "@praveen-palanisamy"
           cache: npm

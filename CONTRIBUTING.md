@@ -12,7 +12,7 @@ npm run browsers:install   # once, for the browser suite
 npm run ci:check           # lint + typecheck + unit tests + pin check
 ```
 
-Requirements: Node ≥ 20 (CI uses 22). Docker is only needed for the image smoke test.
+Requirements: Node ≥ 22 (CI, the Action and `.node-version` use 24 — `fnm use` picks it up automatically). Docker is only needed for the image smoke test.
 
 ## Commands
 

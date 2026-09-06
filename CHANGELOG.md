@@ -5,6 +5,8 @@
 - **CLI**: new `post` command; `--local` runs `probe`/`post` in-process with local Chromium (no service needed); `--session-out`, `--out`, `--content`, `version`.
 - **GitHub Action**: `praveen-palanisamy/agent-browser-runtime@v0` composite action (`command: probe|post`) with `ok` / `authenticated` / `needs-reauth` / `uncertain` outputs; floating major tag maintained by `release-on-green`.
 - **Attribution**: `/healthz` reports `name`, `version`, `repository`; `Server` header on all JSON responses.
+- **Toolchain**: Node 24 everywhere (`.node-version`, CI, Pages, Action default); `engines.node >= 22`. Biome 2, TypeScript 7 (`module`/`moduleResolution: node16`, still CommonJS output), Vitest 5, `@types/node` 26. GitHub Actions bumped to Node 24-compatible majors (checkout v7, setup-node v7, docker/* v4/v7, pages v5/v6); grouped Dependabot updates for actions.
+- **Fix**: `action.yml` input description contained a `${{ … }}` expression, which made the runner reject the manifest.
 - **Docs & site**: project website on GitHub Pages (auto-deployed on releases), `docs/GITHUB_ACTION.md`, distribution-channel table in `docs/DEPLOY.md`; README use cases and examples reworked around an expense-portal assistant.
 
 ## v0.1.0 — 2026-09-06

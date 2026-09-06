@@ -17,8 +17,8 @@ inputs:
     required: true
   session:
     description: >-
-      Serialized AgentSessionState JSON (store it as an encrypted secret and
-      pass `${{ secrets.MY_SESSION }}`). Alternatively set `session-file`.
+      Serialized AgentSessionState JSON. Store it as a repository secret and
+      pass the secret here; alternatively set `session-file`.
     required: false
     default: ""
   session-file:
@@ -74,7 +74,7 @@ inputs:
   node-version:
     description: "Node.js version to run the runtime with"
     required: false
-    default: "22"
+    default: "24"
 
 outputs:
   result-file:
@@ -100,7 +100,7 @@ runs:
   using: "composite"
   steps:
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version: ${{ inputs.node-version }}
 

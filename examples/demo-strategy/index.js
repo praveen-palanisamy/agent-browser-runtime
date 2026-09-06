@@ -10,7 +10,7 @@ const demoStrategy = {
   loginUrl: 'https://example.com/',
 
   validate(content) {
-    if (!content.text || !content.text.trim()) return 'Text is required';
+    if (!content.text?.trim()) return 'Text is required';
     if (content.text.length > 280) return 'Text exceeds 280 characters';
     return null;
   },
@@ -28,7 +28,7 @@ const demoStrategy = {
     }
   },
 
-  async post(context, content) {
+  async post(context, _content) {
     const page = await context.newPage();
     try {
       await page.goto('https://example.com/', {

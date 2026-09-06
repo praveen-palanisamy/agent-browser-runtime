@@ -72,7 +72,7 @@ jobs:
 | `result-out` | `.abr/result.json` | JSON result written here |
 | `fail-on-reauth` | `true` | fail the step when re-auth is needed |
 | `pacing` | `true` | human-pace jitter before acting |
-| `node-version` | `22` | |
+| `node-version` | `24` | |
 
 ## Outputs
 

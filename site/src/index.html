@@ -46,7 +46,7 @@
           "description": "Self-hostable runtime for stateful, secure browser-session execution: capture a user's authenticated browser session once and run unattended, verified Playwright jobs as that user.",
           "codeRepository": "https://github.com/praveen-palanisamy/agent-browser-runtime",
           "programmingLanguage": "TypeScript",
-          "runtimePlatform": "Node.js >= 20",
+          "runtimePlatform": "Node.js >= 22",
           "license": "https://opensource.org/licenses/MIT",
           "version": "{{VERSION}}",
           "url": "https://praveen-palanisamy.github.io/agent-browser-runtime/",
@@ -157,9 +157,9 @@
 
         <div class="install" role="tablist" aria-label="Install options">
           <div class="tabs">
-            <button role="tab" aria-selected="true" data-tab="npm">npm</button>
-            <button role="tab" aria-selected="false" data-tab="docker">Docker</button>
-            <button role="tab" aria-selected="false" data-tab="action">GitHub Action</button>
+            <button type="button" role="tab" aria-selected="true" data-tab="npm">npm</button>
+            <button type="button" role="tab" aria-selected="false" data-tab="docker">Docker</button>
+            <button type="button" role="tab" aria-selected="false" data-tab="action">GitHub Action</button>
           </div>
           <pre data-panel="npm"><code>npm i @praveen-palanisamy/agent-browser-runtime   <span class="c"># <span data-npm-version>v{{VERSION}}</span></span></code></pre>
           <pre data-panel="docker" hidden><code>docker pull ghcr.io/praveen-palanisamy/agent-browser-runtime:<span data-image-tag>{{VERSION}}</span></code></pre>
@@ -230,9 +230,9 @@
           <div class="bar"><span></span><span></span><span></span><b>agent-browser-runtime post --platform expense-portal</b></div>
           <pre class="log" aria-live="polite"></pre>
           <div class="controls">
-            <button class="btn small" data-demo-run="ok">▶ Run: success</button>
-            <button class="btn small" data-demo-run="reauth">▶ Run: session expired</button>
-            <button class="btn small" data-demo-run="uncertain">▶ Run: unverified</button>
+            <button type="button" class="btn small" data-demo-run="ok">▶ Run: success</button>
+            <button type="button" class="btn small" data-demo-run="reauth">▶ Run: session expired</button>
+            <button type="button" class="btn small" data-demo-run="uncertain">▶ Run: unverified</button>
           </div>
         </div>
       </section>

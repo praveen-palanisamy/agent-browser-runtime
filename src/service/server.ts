@@ -9,10 +9,10 @@
 
 import { timingSafeEqual } from 'node:crypto';
 import {
+  createServer,
   type IncomingMessage,
   type Server,
   type ServerResponse,
-  createServer,
 } from 'node:http';
 import { PROJECT, packageVersion, userAgentString } from '../attribution';
 import { RUNNER_ROUTES } from '../protocol';

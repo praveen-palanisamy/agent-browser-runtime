@@ -1,7 +1,11 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": {
-    "enabled": true
+  "$schema": "https://biomejs.dev/schemas/2.5.12/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
   },
   "formatter": {
     "enabled": true,
@@ -19,22 +23,31 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "suspicious": {
         "noExplicitAny": "warn",
-        "noConsoleLog": "off"
+        "noConsole": {
+          "level": "off",
+          "options": {
+            "allow": ["log"]
+          }
+        }
       },
       "style": {
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "off",
+        "noDescendingSpecificity": "off"
       }
     }
   },
   "files": {
-    "ignore": [
-      "dist/**",
-      "site/dist/**",
-      "node_modules/**",
-      "package-lock.json"
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/site/dist",
+      "!**/node_modules",
+      "!**/package-lock.json",
+      "!**/site/src/demos",
+      "!**/*.svg"
     ]
   }
 }

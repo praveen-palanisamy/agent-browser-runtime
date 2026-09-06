@@ -15,8 +15,9 @@
   --bad: #f87171;
   --radius: 14px;
   --max: 1120px;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter,
-    Roboto, sans-serif;
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto,
+    sans-serif;
 }
 * {
   box-sizing: border-box;
@@ -26,7 +27,8 @@ html {
 }
 body {
   margin: 0;
-  background: radial-gradient(
+  background:
+    radial-gradient(
       1200px 600px at 20% -10%,
       rgba(124, 92, 255, 0.18),
       transparent 60%
@@ -35,7 +37,8 @@ body {
       900px 500px at 100% 0%,
       rgba(34, 211, 238, 0.12),
       transparent 60%
-    ), var(--bg);
+    ),
+    var(--bg);
   color: var(--text);
   line-height: 1.55;
 }
