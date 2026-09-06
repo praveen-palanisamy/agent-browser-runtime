@@ -67,6 +67,15 @@
           "url": "https://praveen-palanisamy.github.io/agent-browser-runtime/"
         },
         {
+          "@type": "VideoObject",
+          "name": "Agent Browser Runtime — product tour",
+          "description": "Tour of ABR: the problem, the capture → store → run → refresh lifecycle, a simulated /v1/post run with success, re-auth and uncertain outcomes, and the three-step integration.",
+          "thumbnailUrl": "https://praveen-palanisamy.github.io/agent-browser-runtime/demos/site-tour/latest/steps/0001.webp",
+          "contentUrl": "https://praveen-palanisamy.github.io/agent-browser-runtime/demos/site-tour/latest/video.mp4",
+          "uploadDate": "{{BUILD_DATE}}",
+          "author": { "@id": "https://github.com/praveen-palanisamy" }
+        },
+        {
           "@type": "Person",
           "@id": "https://github.com/praveen-palanisamy",
           "name": "Praveen Palanisamy",
@@ -156,6 +165,15 @@
           <pre data-panel="docker" hidden><code>docker pull ghcr.io/praveen-palanisamy/agent-browser-runtime:<span data-image-tag>{{VERSION}}</span></code></pre>
           <pre data-panel="action" hidden><code>- uses: praveen-palanisamy/agent-browser-runtime@v0</code></pre>
         </div>
+      </section>
+
+      <section class="tour" aria-labelledby="tour-h">
+        <h2 id="tour-h">Quick tour</h2>
+        <p class="sub">Captured from this very page with <a href="https://github.com/praveen-palanisamy/autodemo" rel="noopener">AutoDemo</a> (<code>npm run site:demos</code>) and refreshed with each release — so the demo never drifts from the product.</p>
+        <div class="video-wrap">
+          <video controls muted playsinline preload="metadata" poster="./demos/site-tour/latest/steps/0001.webp" src="./demos/site-tour/latest/video.mp4" aria-label="Agent Browser Runtime product tour"></video>
+        </div>
+        <p class="fine"><a href="./demos/site-tour/latest/index.html">Open the interactive step-by-step walkthrough →</a></p>
       </section>
 
       <section class="problem" aria-labelledby="problem-h">

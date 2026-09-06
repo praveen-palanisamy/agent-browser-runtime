@@ -1,0 +1,219 @@
+{
+  "project": {
+    "name": "Agent Browser Runtime",
+    "baseUrl": "http://127.0.0.1:4174"
+  },
+  "scenario": {
+    "name": "site-tour",
+    "description": "ABR product tour: problem, lifecycle, a simulated run, integration"
+  },
+  "startedAt": "2026-09-06T23:15:45.744Z",
+  "finishedAt": "2026-09-06T23:16:25.812Z",
+  "durationMs": 40068,
+  "status": "success",
+  "steps": [
+    {
+      "index": 0,
+      "type": "goto",
+      "startedAt": "2026-09-06T23:15:46.688Z",
+      "finishedAt": "2026-09-06T23:15:49.288Z",
+      "offsetMs": 944,
+      "durationMs": 2600,
+      "status": "success",
+      "screenshotPath": "steps/0001.webp",
+      "note": "Agent Browser Runtime — let your agent act as the user",
+      "url": "/"
+    },
+    {
+      "index": 1,
+      "type": "sleep",
+      "startedAt": "2026-09-06T23:15:49.288Z",
+      "finishedAt": "2026-09-06T23:15:50.821Z",
+      "offsetMs": 3544,
+      "durationMs": 1533,
+      "status": "success",
+      "screenshotPath": "steps/0002.webp",
+      "note": "Let fonts and layout settle"
+    },
+    {
+      "index": 2,
+      "type": "click",
+      "startedAt": "2026-09-06T23:15:50.821Z",
+      "finishedAt": "2026-09-06T23:15:53.096Z",
+      "offsetMs": 5077,
+      "durationMs": 2275,
+      "status": "success",
+      "screenshotPath": "steps/0003.webp",
+      "note": "Install via npm, Docker (GHCR) or the GitHub Action",
+      "selector": "[data-tab=docker]"
+    },
+    {
+      "index": 3,
+      "type": "click",
+      "startedAt": "2026-09-06T23:15:53.096Z",
+      "finishedAt": "2026-09-06T23:15:55.328Z",
+      "offsetMs": 7352,
+      "durationMs": 2232,
+      "status": "success",
+      "screenshotPath": "steps/0004.webp",
+      "note": "One line in a workflow",
+      "selector": "[data-tab=action]"
+    },
+    {
+      "index": 4,
+      "type": "scrollIntoView",
+      "startedAt": "2026-09-06T23:15:55.328Z",
+      "finishedAt": "2026-09-06T23:15:56.697Z",
+      "offsetMs": 9584,
+      "durationMs": 1369,
+      "status": "success",
+      "screenshotPath": "steps/0005.webp",
+      "note": "Capture once · store encrypted · run unattended · refresh",
+      "selector": "#how"
+    },
+    {
+      "index": 5,
+      "type": "sleep",
+      "startedAt": "2026-09-06T23:15:56.697Z",
+      "finishedAt": "2026-09-06T23:15:58.898Z",
+      "offsetMs": 10953,
+      "durationMs": 2201,
+      "status": "success",
+      "screenshotPath": "steps/0006.webp",
+      "note": "Lifecycle animation"
+    },
+    {
+      "index": 6,
+      "type": "scrollIntoView",
+      "startedAt": "2026-09-06T23:15:58.898Z",
+      "finishedAt": "2026-09-06T23:16:00.275Z",
+      "offsetMs": 13154,
+      "durationMs": 1377,
+      "status": "success",
+      "screenshotPath": "steps/0007.webp",
+      "note": "A simulated /v1/post run",
+      "selector": "#demo"
+    },
+    {
+      "index": 7,
+      "type": "click",
+      "startedAt": "2026-09-06T23:16:00.275Z",
+      "finishedAt": "2026-09-06T23:16:02.489Z",
+      "offsetMs": 14531,
+      "durationMs": 2214,
+      "status": "success",
+      "screenshotPath": "steps/0008.webp",
+      "note": "Success: verified claim number, rotated cookies returned",
+      "selector": "[data-demo-run=ok]"
+    },
+    {
+      "index": 8,
+      "type": "sleep",
+      "startedAt": "2026-09-06T23:16:02.489Z",
+      "finishedAt": "2026-09-06T23:16:07.142Z",
+      "offsetMs": 16745,
+      "durationMs": 4653,
+      "status": "success",
+      "screenshotPath": "steps/0009.webp",
+      "note": "Watch the run"
+    },
+    {
+      "index": 9,
+      "type": "click",
+      "startedAt": "2026-09-06T23:16:07.142Z",
+      "finishedAt": "2026-09-06T23:16:09.365Z",
+      "offsetMs": 21398,
+      "durationMs": 2223,
+      "status": "success",
+      "screenshotPath": "steps/0010.webp",
+      "note": "Expired session → needsReauth, nothing submitted",
+      "selector": "[data-demo-run=reauth]"
+    },
+    {
+      "index": 10,
+      "type": "sleep",
+      "startedAt": "2026-09-06T23:16:09.365Z",
+      "finishedAt": "2026-09-06T23:16:13.000Z",
+      "offsetMs": 23621,
+      "durationMs": 3635,
+      "status": "success",
+      "screenshotPath": "steps/0011.webp",
+      "note": "Re-auth is a first-class outcome"
+    },
+    {
+      "index": 11,
+      "type": "click",
+      "startedAt": "2026-09-06T23:16:13.000Z",
+      "finishedAt": "2026-09-06T23:16:15.214Z",
+      "offsetMs": 27256,
+      "durationMs": 2214,
+      "status": "success",
+      "screenshotPath": "steps/0012.webp",
+      "note": "Unverified → uncertain, never retried blindly",
+      "selector": "[data-demo-run=uncertain]"
+    },
+    {
+      "index": 12,
+      "type": "sleep",
+      "startedAt": "2026-09-06T23:16:15.214Z",
+      "finishedAt": "2026-09-06T23:16:19.841Z",
+      "offsetMs": 29470,
+      "durationMs": 4627,
+      "status": "success",
+      "screenshotPath": "steps/0013.webp",
+      "note": "Uncertain ≠ failed"
+    },
+    {
+      "index": 13,
+      "type": "scrollIntoView",
+      "startedAt": "2026-09-06T23:16:19.841Z",
+      "finishedAt": "2026-09-06T23:16:21.244Z",
+      "offsetMs": 34097,
+      "durationMs": 1403,
+      "status": "success",
+      "screenshotPath": "steps/0014.webp",
+      "note": "Describe a platform, run the runner, call it from anywhere",
+      "selector": "#integrate"
+    },
+    {
+      "index": 14,
+      "type": "scrollIntoView",
+      "startedAt": "2026-09-06T23:16:21.244Z",
+      "finishedAt": "2026-09-06T23:16:22.630Z",
+      "offsetMs": 35500,
+      "durationMs": 1386,
+      "status": "success",
+      "screenshotPath": "steps/0015.webp",
+      "note": "Why not raw Playwright or a hosted browser API?",
+      "selector": ".compare"
+    },
+    {
+      "index": 15,
+      "type": "scrollTo",
+      "startedAt": "2026-09-06T23:16:22.630Z",
+      "finishedAt": "2026-09-06T23:16:23.667Z",
+      "offsetMs": 36886,
+      "durationMs": 1037,
+      "status": "success",
+      "screenshotPath": "steps/0016.webp",
+      "note": "Back to the top"
+    },
+    {
+      "index": 16,
+      "type": "sleep",
+      "startedAt": "2026-09-06T23:16:23.667Z",
+      "finishedAt": "2026-09-06T23:16:25.321Z",
+      "offsetMs": 37923,
+      "durationMs": 1654,
+      "status": "success",
+      "screenshotPath": "steps/0017.webp",
+      "note": "Tail"
+    }
+  ],
+  "artifacts": {
+    "interactiveHtmlPath": "index.html",
+    "runJsonPath": "run.json",
+    "ffmpegLogPath": "logs/1788736546688_site-tour.log",
+    "videoMp4Path": "video.mp4"
+  }
+}

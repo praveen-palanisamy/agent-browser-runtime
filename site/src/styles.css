@@ -580,3 +580,20 @@ tr:last-child td {
   padding: 4px 16px;
   color: var(--muted);
 }
+
+/* product tour */
+.video-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #000;
+  max-width: 960px;
+}
+.video-wrap video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: top;
+  background: #000;
+}

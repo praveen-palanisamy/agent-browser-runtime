@@ -79,7 +79,8 @@
     "release:prepare": "node scripts/release.mjs",
     "prepublishOnly": "npm run build",
     "site:build": "node scripts/site-build.mjs",
-    "site:serve": "node scripts/site-build.mjs && npx -y serve site/dist"
+    "site:serve": "node scripts/site-build.mjs && npx -y serve site/dist",
+    "site:demos": "node scripts/site-demos.mjs"
   },
   "dependencies": {
     "playwright-core": "^1.57.0"

@@ -1,0 +1,91 @@
+# AutoDemo (https://github.com/praveen-palanisamy/autodemo) scenarios that
+# capture the ABR project site: video + interactive walkthrough published at
+# site/src/demos/<scenario>/latest. Regenerate with `npm run site:demos`
+# (needs Chromium + ffmpeg locally; CI does not re-capture).
+
+project:
+  name: Agent Browser Runtime
+
+output:
+  dir: site/src/demos
+  clean: true
+
+browser:
+  headless: true
+  recordVideo: true
+  viewport: { width: 1600, height: 900 }
+  cursor:
+    showCursor: true
+    style: arrow
+    pointerColor: "#22d3ee"
+    clickColor: "#7c5cff"
+    highlightClicks: true
+    clickRadius: 24
+  transitions:
+    transitionMs: 700
+    endPauseMs: 1200
+  video:
+    source: frames
+    trimStartBeforeMs: 800
+
+scenarios:
+  site-tour:
+    description: "ABR product tour: problem, lifecycle, a simulated run, integration"
+    videoStartStep: 1
+    steps:
+      - type: goto
+        url: /
+        note: "Agent Browser Runtime — let your agent act as the user"
+      - type: sleep
+        ms: 500
+        note: "Let fonts and layout settle"
+      - type: click
+        selector: "[data-tab=docker]"
+        note: "Install via npm, Docker (GHCR) or the GitHub Action"
+      - type: click
+        selector: "[data-tab=action]"
+        note: "One line in a workflow"
+      - type: scrollIntoView
+        selector: "#how"
+        behavior: auto
+        note: "Capture once · store encrypted · run unattended · refresh"
+      - type: sleep
+        ms: 1200
+        note: "Lifecycle animation"
+      - type: scrollIntoView
+        selector: "#demo"
+        behavior: auto
+        note: "A simulated /v1/post run"
+      - type: click
+        selector: "[data-demo-run=ok]"
+        note: "Success: verified claim number, rotated cookies returned"
+      - type: sleep
+        ms: 3600
+        note: "Watch the run"
+      - type: click
+        selector: "[data-demo-run=reauth]"
+        note: "Expired session → needsReauth, nothing submitted"
+      - type: sleep
+        ms: 2600
+        note: "Re-auth is a first-class outcome"
+      - type: click
+        selector: "[data-demo-run=uncertain]"
+        note: "Unverified → uncertain, never retried blindly"
+      - type: sleep
+        ms: 3600
+        note: "Uncertain ≠ failed"
+      - type: scrollIntoView
+        selector: "#integrate"
+        behavior: auto
+        note: "Describe a platform, run the runner, call it from anywhere"
+      - type: scrollIntoView
+        selector: ".compare"
+        behavior: auto
+        note: "Why not raw Playwright or a hosted browser API?"
+      - type: scrollTo
+        y: 0
+        behavior: auto
+        note: "Back to the top"
+      - type: sleep
+        ms: 600
+        note: "Tail"

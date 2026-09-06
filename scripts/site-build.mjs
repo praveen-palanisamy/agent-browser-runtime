@@ -34,7 +34,8 @@ const AUTHOR = 'Praveen Palanisamy';
 const VERSION = pkg.version;
 const today = new Date().toISOString().slice(0, 10);
 
-const inject = (s) => s.replaceAll('{{VERSION}}', VERSION);
+const inject = (s) =>
+  s.replaceAll('{{VERSION}}', VERSION).replaceAll('{{BUILD_DATE}}', today);
 
 rmSync(distDir, { recursive: true, force: true });
 mkdirSync(distDir, { recursive: true });
