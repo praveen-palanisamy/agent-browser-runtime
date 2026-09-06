@@ -1,0 +1,40 @@
+# Local stack: self-hosted Steel (live view for session capture) + runtime.
+# Mount your strategies module and point --strategies at it.
+#
+#   AGENT_RUNNER_TOKEN=$(openssl rand -base64 32) docker compose up --build
+services:
+  steel:
+    image: ghcr.io/steel-dev/steel-browser-api:latest
+    environment:
+      DOMAIN: localhost:3000
+      CDP_DOMAIN: localhost:9223
+    ports:
+      - "3000:3000"
+      - "9223:9223"
+    volumes:
+      - steel-cache:/app/.cache
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/v1/sessions >/dev/null || wget -qO- http://localhost:3000/v1/sessions >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  runtime:
+    build: .
+    command: ["serve", "--strategies", "/strategies/index.js"]
+    environment:
+      AGENT_RUNNER_TOKEN: ${AGENT_RUNNER_TOKEN:?set AGENT_RUNNER_TOKEN}
+      AGENT_RUNNER_PUBLIC_URL: ${AGENT_RUNNER_PUBLIC_URL:-http://localhost:8080}
+      AGENT_RUNNER_JOB_PROVIDER: local
+      AGENT_RUNNER_CAPTURE_PROVIDER: steel
+      STEEL_API_URL: http://steel:3000
+    volumes:
+      - ${STRATEGIES_DIR:?set STRATEGIES_DIR to a folder containing index.js}:/strategies:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      steel:
+        condition: service_healthy
+
+volumes:
+  steel-cache:
