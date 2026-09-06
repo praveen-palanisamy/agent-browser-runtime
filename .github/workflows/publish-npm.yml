@@ -1,0 +1,73 @@
+name: publish-npm
+
+# Publishes semver git tags (v0.1.1, v0.2.0, …) to npmjs (Trusted Publishing /
+# OIDC, provenance attestation) and to GitHub Packages.
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to publish (semver tag or branch)"
+        required: true
+      dry_run:
+        description: "npm publish --dry-run"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+jobs:
+  npmjs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+      - run: npm ci
+      - name: Validate
+        run: npm run ci:check
+      - name: Tag must match package.json version
+        if: github.event_name == 'push'
+        run: |
+          PKG=$(node -p "require('./package.json').version")
+          [ "v$PKG" = "${GITHUB_REF_NAME}" ] || { echo "tag ${GITHUB_REF_NAME} != package.json v$PKG"; exit 1; }
+      - name: Publish to npmjs
+        run: |
+          set -euo pipefail
+          # setup-node writes an _authToken line that blocks OIDC when NODE_AUTH_TOKEN is unset.
+          NPMRC="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
+          [ -f "$NPMRC" ] && sed -i '/_authToken/d' "$NPMRC"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
+            npm publish --provenance --access public --dry-run
+          else
+            npm publish --provenance --access public
+          fi
+
+  github-packages:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@praveen-palanisamy"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Publish to GitHub Packages
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,38 @@
+name: release-on-green
+
+# After CI passes on main: if package.json's version has no git tag yet,
+# create the tag and draft a GitHub Release (which fans out to npm + GHCR).
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag-and-draft:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+      - name: Tag + draft release when missing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag ${TAG} exists — nothing to do."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG" "${{ github.event.workflow_run.head_sha }}"
+          git push origin "$TAG"
+          gh release create "$TAG" --draft --title "agent-browser-runtime v${VERSION}" --generate-notes

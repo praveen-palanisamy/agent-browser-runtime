@@ -1,0 +1,40 @@
+name: release
+
+# Manual: bump version + changelog, commit, tag. The tag then triggers
+# publish-npm and publish-image; release-on-green drafts the GitHub Release.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump"
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Validate
+        run: npm run ci:check
+      - name: Bump version + changelog
+        run: node scripts/release.mjs --bump=${{ inputs.bump }}
+      - name: Commit + tag + push
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json CHANGELOG.md
+          git commit -m "chore(release): v$VERSION"
+          git tag "v$VERSION"
+          git push --follow-tags
