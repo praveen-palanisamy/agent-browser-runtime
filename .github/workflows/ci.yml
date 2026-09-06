@@ -33,6 +33,8 @@ jobs:
         run: |
           npm run build
           npm run pack:check
+      - name: Site builds
+        run: npm run site:build
 
   # Real Chromium smoke: local provider + session round-trip.
   browser:

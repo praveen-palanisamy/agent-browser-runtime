@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agent Browser Runtime (ABR) — Let AI agents act as the user in their own logged-in browser session</title>
+    <meta
+      name="description"
+      content="ABR is an open-source, self-hostable runtime for stateful, secure browser-session execution. Capture a user's authenticated session once, store it encrypted in your database, and run unattended Playwright jobs as that user — with verification, re-auth signalling and rotated cookies handed back. npm, Docker (GHCR) and GitHub Action."
+    />
+    <meta
+      name="keywords"
+      content="agent browser runtime, ABR, browser automation for AI agents, authenticated browser session, Playwright storageState, act on behalf of user, self-hosted browser agent, Steel browser, Kernel browsers, CDP, headless chrome, agent infrastructure, MCP tools, RPA alternative, session persistence, GitHub Action browser automation"
+    />
+    <meta name="author" content="Praveen Palanisamy" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://praveen-palanisamy.github.io/agent-browser-runtime/" />
+    <link rel="alternate" type="application/rss+xml" title="ABR releases" href="https://github.com/praveen-palanisamy/agent-browser-runtime/releases.atom" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="me" href="https://github.com/praveen-palanisamy" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Agent Browser Runtime (ABR)" />
+    <meta property="og:title" content="Agent Browser Runtime — let your agent act as the user, on infrastructure you control" />
+    <meta property="og:description" content="Stateful, secure browser-session execution for AI agents. Capture once, run unattended, verify every action, never lose the session. Open source (MIT)." />
+    <meta property="og:url" content="https://praveen-palanisamy.github.io/agent-browser-runtime/" />
+    <meta property="og:image" content="https://praveen-palanisamy.github.io/agent-browser-runtime/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Agent Browser Runtime (ABR)" />
+    <meta name="twitter:description" content="Let AI agents act as the user in their own logged-in browser session — self-hosted, verified, session-safe. MIT." />
+    <meta name="twitter:image" content="https://praveen-palanisamy.github.io/agent-browser-runtime/og.png" />
+
+    <link rel="stylesheet" href="./styles.css" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareSourceCode",
+          "@id": "https://github.com/praveen-palanisamy/agent-browser-runtime",
+          "name": "Agent Browser Runtime (ABR)",
+          "alternateName": ["agent-browser-runtime", "ABR", "@praveen-palanisamy/agent-browser-runtime"],
+          "description": "Self-hostable runtime for stateful, secure browser-session execution: capture a user's authenticated browser session once and run unattended, verified Playwright jobs as that user.",
+          "codeRepository": "https://github.com/praveen-palanisamy/agent-browser-runtime",
+          "programmingLanguage": "TypeScript",
+          "runtimePlatform": "Node.js >= 20",
+          "license": "https://opensource.org/licenses/MIT",
+          "version": "{{VERSION}}",
+          "url": "https://praveen-palanisamy.github.io/agent-browser-runtime/",
+          "author": { "@id": "https://github.com/praveen-palanisamy" },
+          "keywords": "browser automation, AI agents, authenticated sessions, Playwright, Steel, Kernel, CDP, self-hosted"
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Agent Browser Runtime",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Linux, macOS, Windows (Node.js), Docker",
+          "softwareVersion": "{{VERSION}}",
+          "downloadUrl": "https://www.npmjs.com/package/@praveen-palanisamy/agent-browser-runtime",
+          "installUrl": "https://github.com/praveen-palanisamy/agent-browser-runtime/pkgs/container/agent-browser-runtime",
+          "softwareHelp": "https://github.com/praveen-palanisamy/agent-browser-runtime#readme",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+          "author": { "@id": "https://github.com/praveen-palanisamy" },
+          "url": "https://praveen-palanisamy.github.io/agent-browser-runtime/"
+        },
+        {
+          "@type": "Person",
+          "@id": "https://github.com/praveen-palanisamy",
+          "name": "Praveen Palanisamy",
+          "url": "https://github.com/praveen-palanisamy",
+          "sameAs": ["https://www.npmjs.com/~praveen-palanisamy"]
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is Agent Browser Runtime (ABR)?",
+              "acceptedAnswer": { "@type": "Answer", "text": "ABR is an open-source (MIT), self-hostable runtime that lets AI agents and scheduled jobs act as a specific user inside that user's own authenticated browser session. It handles session capture, encrypted hand-off, isolated per-job browser contexts, verification contracts and re-authentication signalling on top of Playwright, Steel or Kernel." }
+            },
+            {
+              "@type": "Question",
+              "name": "How is ABR different from Playwright or Puppeteer?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Playwright drives a browser. ABR adds what production needs around it: portable per-user sessions, a stateless HTTP runner with a Playwright-free client, verified results that separate 'uncertain' from 'failed', refreshed cookies returned after every job, interactive sign-in capture with a live view, and pluggable browser back-ends." }
+            },
+            {
+              "@type": "Question",
+              "name": "Does ABR store user passwords or sessions?",
+              "acceptedAnswer": { "@type": "Answer", "text": "No. Users sign in themselves inside a live view; ABR only exports the resulting browser storage state. The runtime never persists sessions — your application encrypts and stores them and passes them in per job." }
+            },
+            {
+              "@type": "Question",
+              "name": "How do I install ABR?",
+              "acceptedAnswer": { "@type": "Answer", "text": "npm i @praveen-palanisamy/agent-browser-runtime for the library and client; docker pull ghcr.io/praveen-palanisamy/agent-browser-runtime for the runner service with Chromium; or uses: praveen-palanisamy/agent-browser-runtime@v0 in GitHub Actions." }
+            },
+            {
+              "@type": "Question",
+              "name": "Which browser back-ends does ABR support?",
+              "acceptedAnswer": { "@type": "Answer", "text": "Local Chromium via Playwright, any Chrome DevTools Protocol endpoint, self-hosted or cloud Steel Browser (with live view), and Kernel microVMs. Providers are swappable without changing your strategies." }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="wrap header">
+      <a class="brand" href="./" aria-label="Agent Browser Runtime home">
+        <span class="logo" aria-hidden="true">ABR</span>
+        <span>
+          <span class="title">Agent Browser Runtime</span>
+          <span class="subtitle">act as the user · on your infra</span>
+        </span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="#how">How it works</a>
+        <a href="#demo">Demo</a>
+        <a href="#integrate">Integrate</a>
+        <a href="#faq">FAQ</a>
+        <a href="./docs/ARCHITECTURE.html">Docs</a>
+        <a class="gh" href="https://github.com/praveen-palanisamy/agent-browser-runtime" rel="noopener">GitHub <span id="stars" class="stars" hidden></span></a>
+      </nav>
+    </header>
+
+    <main id="main" class="wrap">
+      <section class="hero">
+        <div class="pill-row">
+          <span class="pill">Open source · MIT · Self-hosted</span>
+          <a class="pill live" id="release-pill" href="https://github.com/praveen-palanisamy/agent-browser-runtime/releases/latest" rel="noopener">
+            <span class="dot"></span> v{{VERSION}}
+          </a>
+        </div>
+        <h1>Your agent can finally <em>act as the user</em> — in their own logged-in browser, on infrastructure you control.</h1>
+        <p class="lead">
+          ABR is the missing layer between “I have Playwright” and “I run unattended, per-user, authenticated browser jobs in production.”
+          Capture a session once, store it encrypted in <strong>your</strong> database, and let any cron, queue or serverless function
+          drive the real web UI as that user — with verification, re-auth signalling, and rotated cookies handed back every time.
+        </p>
+        <div class="cta">
+          <a class="btn primary" href="#integrate">Get started</a>
+          <a class="btn" href="https://github.com/praveen-palanisamy/agent-browser-runtime" rel="noopener">Star on GitHub</a>
+        </div>
+
+        <div class="install" role="tablist" aria-label="Install options">
+          <div class="tabs">
+            <button role="tab" aria-selected="true" data-tab="npm">npm</button>
+            <button role="tab" aria-selected="false" data-tab="docker">Docker</button>
+            <button role="tab" aria-selected="false" data-tab="action">GitHub Action</button>
+          </div>
+          <pre data-panel="npm"><code>npm i @praveen-palanisamy/agent-browser-runtime   <span class="c"># <span data-npm-version>v{{VERSION}}</span></span></code></pre>
+          <pre data-panel="docker" hidden><code>docker pull ghcr.io/praveen-palanisamy/agent-browser-runtime:<span data-image-tag>{{VERSION}}</span></code></pre>
+          <pre data-panel="action" hidden><code>- uses: praveen-palanisamy/agent-browser-runtime@v0</code></pre>
+        </div>
+      </section>
+
+      <section class="problem" aria-labelledby="problem-h">
+        <h2 id="problem-h">The part of “agents that do things” nobody ships</h2>
+        <div class="grid three">
+          <article>
+            <h3>No API, or a metered one</h3>
+            <p>The portal your user needs — expenses, vendor, bank, marketplace, government — has no automation surface. The only interface is the web UI they are already signed into.</p>
+          </article>
+          <article>
+            <h3>Sessions live on a laptop</h3>
+            <p>Browser profiles do not travel. Cookies rotate, MFA fires, and “just run Playwright on a server” dies the first time the user closes their lid.</p>
+          </article>
+          <article>
+            <h3>“Did it actually happen?”</h3>
+            <p>Automation that cannot verify its own outcome retries blindly and double-acts. Failures, timeouts and successes get lumped together.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="how" class="how" aria-labelledby="how-h">
+        <h2 id="how-h">How ABR works</h2>
+        <p class="sub">Three primitives — <code>capture</code>, <code>post</code>, <code>probe</code> — around one durable idea: the user's session is portable, encrypted by you, and refreshed on every run.</p>
+        <figure class="flow">
+          <svg viewBox="0 0 960 300" role="img" aria-labelledby="flow-title flow-desc">
+            <title id="flow-title">ABR request lifecycle</title>
+            <desc id="flow-desc">The user signs in once inside a live view. The application stores the session encrypted. Later a job decrypts it, the runtime opens a fresh browser context, verifies authentication, performs the action via a strategy, verifies the result and returns the refreshed session.</desc>
+            <defs>
+              <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8b93a7"/></marker>
+            </defs>
+            <g class="node" transform="translate(20,40)"><rect width="170" height="90" rx="14"/><text x="85" y="36">User signs in</text><text x="85" y="60" class="small">live view · MFA · no password seen</text></g>
+            <g class="node vault" transform="translate(240,40)"><rect width="170" height="90" rx="14"/><text x="85" y="36">Your encrypted store</text><text x="85" y="60" class="small">storageState · your keys</text></g>
+            <g class="node" transform="translate(460,40)"><rect width="200" height="90" rx="14"/><text x="100" y="36">Orchestrator</text><text x="100" y="60" class="small">cron · queue · serverless</text></g>
+            <g class="node rt" transform="translate(710,40)"><rect width="230" height="90" rx="14"/><text x="115" y="36">ABR runner</text><text x="115" y="60" class="small">fresh context · strategy · verify</text></g>
+            <g class="node prov" transform="translate(710,180)"><rect width="230" height="80" rx="14"/><text x="115" y="34">Browser provider</text><text x="115" y="58" class="small">local · CDP · Steel · Kernel</text></g>
+            <g class="node out" transform="translate(240,180)"><rect width="420" height="80" rx="14"/><text x="210" y="34">Result</text><text x="210" y="58" class="small">ok · uncertain · needsReauth · refreshedSession</text></g>
+            <path class="edge" d="M190 85 H240" marker-end="url(#arrow)"/>
+            <path class="edge" d="M410 85 H460" marker-end="url(#arrow)"/>
+            <path class="edge" d="M660 85 H710" marker-end="url(#arrow)"/>
+            <path class="edge" d="M825 130 V180" marker-end="url(#arrow)"/>
+            <path class="edge" d="M710 220 H660" marker-end="url(#arrow)"/>
+            <path class="edge" d="M325 180 V130" marker-end="url(#arrow)"/>
+            <circle class="packet" r="6"><animateMotion dur="6s" repeatCount="indefinite" path="M190 85 H460 H710 L825 85 V220 H660 H325 V130"/></circle>
+          </svg>
+          <figcaption>The runtime is stateless between requests: sessions are never persisted by it, every job runs in a fresh browser context, and the only in-memory state is an in-flight interactive capture.</figcaption>
+        </figure>
+      </section>
+
+      <section id="demo" class="demo" aria-labelledby="demo-h">
+        <h2 id="demo-h">See a job run</h2>
+        <p class="sub">A simulated run of the runner against an expense portal that has no API. This is the exact contract you get back from <code>/v1/post</code> — including what happens when the session has expired.</p>
+        <div class="terminal" data-demo>
+          <div class="bar"><span></span><span></span><span></span><b>agent-browser-runtime post --platform expense-portal</b></div>
+          <pre class="log" aria-live="polite"></pre>
+          <div class="controls">
+            <button class="btn small" data-demo-run="ok">▶ Run: success</button>
+            <button class="btn small" data-demo-run="reauth">▶ Run: session expired</button>
+            <button class="btn small" data-demo-run="uncertain">▶ Run: unverified</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="features" aria-labelledby="features-h">
+        <h2 id="features-h">What you get</h2>
+        <div class="grid three">
+          <article><h3>Portable sessions</h3><p>Playwright <code>storageState</code> + UA + expiry hints in one <code>AgentSessionState</code>. Encrypt it in your DB; ABR never stores it.</p></article>
+          <article><h3>Interactive capture</h3><p>Users sign in inside an embeddable, proxied live view with unguessable, expiring capture ids. MFA just works. You never see a password.</p></article>
+          <article><h3>Verification contract</h3><p>Strategies must verify. Results distinguish <code>ok</code>, <code>uncertain</code>, <code>needsReauth</code> and <code>failureStage</code> so you never double-act.</p></article>
+          <article><h3>Rotated cookies, returned</h3><p>Every job hands back <code>refreshedSession</code>. Long-lived sessions keep working without users re-linking.</p></article>
+          <article><h3>Playwright-free client</h3><p>Call the runner from Cloud Functions, Lambdas, queues or cron with a tiny typed client. No Chromium in your app.</p></article>
+          <article><h3>Pluggable engines</h3><p>Local Chromium, any CDP endpoint, self-hosted Steel (live view), Kernel microVMs. Swap providers; strategies stay the same.</p></article>
+          <article><h3>Isolation per job</h3><p>Fresh context per request, disposed afterwards. Bearer-token API. Human-pace jitter so unattended jobs do not fire at machine cadence.</p></article>
+          <article><h3>Ship anywhere</h3><p>npm package, multi-arch GHCR image with Chromium pinned to Playwright, and a GitHub Action. Cloud Run / ECS / compose recipes included.</p></article>
+          <article><h3>Agent &amp; LLM friendly</h3><p>Stable wire protocol, typed contracts, <code>docs/AGENTS.md</code> and <code>llms.txt</code> so coding agents can integrate ABR without guessing.</p></article>
+        </div>
+      </section>
+
+      <section class="usecases" aria-labelledby="uc-h">
+        <h2 id="uc-h">Where teams use it</h2>
+        <ul class="chips">
+          <li>Finance assistants that file expenses and submit timesheets</li>
+          <li>Back-office SaaS acting inside each customer's vendor or bank portal</li>
+          <li>Agent frameworks &amp; MCP tools needing an “act as this user” primitive</li>
+          <li>Scheduled, user-authorized publishing to systems with no automation surface</li>
+          <li>Nightly health probes that warn users before a job fails</li>
+        </ul>
+        <p class="fine">ABR gives you the execution primitive; you remain responsible for using it only with the user's explicit authorization and within each target site's terms of service.</p>
+      </section>
+
+      <section id="integrate" class="integrate" aria-labelledby="int-h">
+        <h2 id="int-h">Integrate in three steps</h2>
+        <div class="steps">
+          <article>
+            <h3><span>1</span> Describe a platform</h3>
+            <pre><code>import type { WebPostStrategy } from '@praveen-palanisamy/agent-browser-runtime';
+
+export const expensePortal: WebPostStrategy = {
+  platform: 'expense-portal',
+  loginUrl: 'https://expenses.corp.example/login',
+  validate: (c) => (c.text ? null : 'Description required'),
+  async isAuthenticated(ctx) {
+    const page = await ctx.newPage();
+    await page.goto('https://expenses.corp.example/');
+    return page.getByRole('button', { name: 'New claim' }).isVisible();
+  },
+  async post(ctx, content) {
+    const page = await ctx.newPage();
+    await page.goto('https://expenses.corp.example/claims/new');
+    await page.getByLabel('Description').fill(content.text);
+    await page.getByRole('button', { name: 'Submit claim' }).click();
+    const claim = await page.getByTestId('claim-number').textContent().catch(() => null);
+    return claim
+      ? { ok: true, platformPostId: claim, verification: 'toast' }
+      : { ok: false, uncertain: true, failureStage: 'verify' };
+  },
+};</code></pre>
+          </article>
+          <article>
+            <h3><span>2</span> Run the runner</h3>
+            <pre><code># container (Chromium included)
+docker run -p 8080:8080 \
+  -e AGENT_RUNNER_TOKEN=$(openssl rand -base64 32) \
+  -v $PWD/dist:/strategies:ro \
+  ghcr.io/praveen-palanisamy/agent-browser-runtime:latest \
+  serve --strategies /strategies/strategies.js
+
+# or in-process
+import { startRunner } from '@praveen-palanisamy/agent-browser-runtime/service';
+startRunner({ strategies: [expensePortal] });</code></pre>
+          </article>
+          <article>
+            <h3><span>3</span> Call it from anywhere</h3>
+            <pre><code>import { AgentRunnerClient } from '@praveen-palanisamy/agent-browser-runtime/client';
+const runner = new AgentRunnerClient({ baseUrl, token });
+
+// once: user signs in inside the live view you embed
+const { captureId, liveViewUrl } = await runner.captureStart({ platform: 'expense-portal' });
+const done = await runner.captureFinish({ captureId });
+if (done.ok) await vault.save(userId, encrypt(done.state));
+
+// later, unattended
+const res = await runner.post({
+  workspaceId, accountId: userId, platform: 'expense-portal', jobId,
+  session: decrypt(await vault.load(userId)),
+  content: { text: 'March travel', mediaUrls: receipts },
+});
+if (res.refreshedSession) await vault.save(userId, encrypt(res.refreshedSession));
+if (res.needsReauth) notify(userId);
+if (res.uncertain) queueManualReview(jobId); // never retry blindly</code></pre>
+          </article>
+        </div>
+        <p class="sub">Prefer CI? <a href="./docs/GITHUB_ACTION.html">The GitHub Action</a> runs <code>probe</code> and <code>post</code> jobs without deploying anything.</p>
+      </section>
+
+      <section class="compare" aria-labelledby="cmp-h">
+        <h2 id="cmp-h">Why not just…</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th></th><th>Raw Playwright</th><th>Hosted browser API</th><th>ABR</th></tr></thead>
+            <tbody>
+              <tr><td>Per-user authenticated sessions</td><td>DIY</td><td>Vendor profiles</td><td>Portable, encrypted by you</td></tr>
+              <tr><td>Runs from serverless / queues</td><td>No (needs Chromium)</td><td>Yes</td><td>Yes — Playwright-free client</td></tr>
+              <tr><td>Interactive sign-in with live view</td><td>DIY</td><td>Sometimes</td><td>Built in, proxied, expiring</td></tr>
+              <tr><td>Verified results / no double-act</td><td>DIY</td><td>No</td><td>Contract: ok · uncertain · needsReauth</td></tr>
+              <tr><td>Rotated cookies returned</td><td>DIY</td><td>Vendor-side</td><td>Every job</td></tr>
+              <tr><td>Where data lives</td><td>Yours</td><td>Vendor</td><td>Yours (Steel / Kernel / local — swappable)</td></tr>
+              <tr><td>License</td><td>Apache-2.0</td><td>Proprietary</td><td>MIT</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="faq" class="faq" aria-labelledby="faq-h">
+        <h2 id="faq-h">FAQ</h2>
+        <details><summary>What is Agent Browser Runtime (ABR)?</summary><p>An open-source (MIT), self-hostable runtime that lets AI agents and scheduled jobs act as a specific user inside that user's own authenticated browser session. It handles session capture, encrypted hand-off, isolated per-job browser contexts, verification contracts and re-authentication signalling on top of Playwright, Steel or Kernel.</p></details>
+        <details><summary>How is ABR different from Playwright or Puppeteer?</summary><p>Playwright drives a browser. ABR adds what production needs around it: portable per-user sessions, a stateless HTTP runner with a Playwright-free client, verified results that separate <em>uncertain</em> from <em>failed</em>, refreshed cookies returned after every job, interactive sign-in capture with a live view, and pluggable browser back-ends.</p></details>
+        <details><summary>Does ABR store passwords or sessions?</summary><p>No. Users sign in themselves inside a live view; ABR only exports the resulting browser storage state. The runtime never persists sessions — your application encrypts and stores them and passes them in per job. Treat them with password-equivalent sensitivity.</p></details>
+        <details><summary>Which browser back-ends are supported?</summary><p>Local Chromium via Playwright, any Chrome DevTools Protocol endpoint, self-hosted or cloud <a href="https://github.com/steel-dev/steel-browser" rel="noopener">Steel Browser</a> (with live view), and <a href="https://www.onkernel.com/" rel="noopener">Kernel</a> microVMs. Providers are swappable without changing your strategies.</p></details>
+        <details><summary>How do I install it?</summary><p><code>npm i @praveen-palanisamy/agent-browser-runtime</code> for the library and client; <code>docker pull ghcr.io/praveen-palanisamy/agent-browser-runtime</code> for the runner with Chromium; or <code>uses: praveen-palanisamy/agent-browser-runtime@v0</code> in GitHub Actions.</p></details>
+        <details><summary>Is it allowed to automate a site this way?</summary><p>That depends on the site's terms and on having the user's explicit authorization. ABR is a general execution primitive — the same one a user's own browser extension or RPA bot would use — and it exposes official-API fallbacks in its contracts so you can prefer them where they exist.</p></details>
+        <details><summary>Who maintains ABR?</summary><p><a href="https://github.com/praveen-palanisamy" rel="noopener">Praveen Palanisamy</a>. Source, issues and releases live at <a href="https://github.com/praveen-palanisamy/agent-browser-runtime" rel="noopener">github.com/praveen-palanisamy/agent-browser-runtime</a>.</p></details>
+      </section>
+
+      <section class="final-cta">
+        <h2>Give your agent hands.</h2>
+        <div class="cta">
+          <a class="btn primary" href="https://github.com/praveen-palanisamy/agent-browser-runtime" rel="noopener">View on GitHub</a>
+          <a class="btn" href="https://www.npmjs.com/package/@praveen-palanisamy/agent-browser-runtime" rel="noopener">npm</a>
+          <a class="btn" href="https://github.com/praveen-palanisamy/agent-browser-runtime/pkgs/container/agent-browser-runtime" rel="noopener">GHCR</a>
+          <a class="btn" href="https://github.com/marketplace/actions/agent-browser-runtime-abr" rel="noopener">Marketplace</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="wrap footer">
+      <div>
+        <strong>Agent Browser Runtime (ABR)</strong> · v{{VERSION}} · MIT ·
+        © <a href="https://github.com/praveen-palanisamy" rel="noopener">Praveen Palanisamy</a>
+      </div>
+      <div class="links">
+        <a href="https://github.com/praveen-palanisamy/agent-browser-runtime" rel="noopener">Source</a>
+        <a href="https://github.com/praveen-palanisamy/agent-browser-runtime/releases" rel="noopener">Releases</a>
+        <a href="./docs/ARCHITECTURE.html">Architecture</a>
+        <a href="./docs/DEPLOY.html">Deploy</a>
+        <a href="./docs/GITHUB_ACTION.html">GitHub Action</a>
+        <a href="./docs/AGENTS.html">For agents</a>
+        <a href="./llms.txt">llms.txt</a>
+        <a href="https://github.com/praveen-palanisamy/agent-browser-runtime/security/policy" rel="noopener">Security</a>
+      </div>
+      <p class="cite">Cite: Palanisamy, P. <em>Agent Browser Runtime (ABR): stateful, secure browser-session execution for agents.</em> https://github.com/praveen-palanisamy/agent-browser-runtime</p>
+    </footer>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

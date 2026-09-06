@@ -24,6 +24,8 @@ Requirements: Node ≥ 20 (CI uses 22). Docker is only needed for the image smok
 | `npm run typecheck` / `npm run build` | tsc |
 | `node scripts/check-playwright-pin.mjs` | Dockerfile base image == locked `playwright-core` |
 | `node scripts/release.mjs --bump=patch` | Bump version + CHANGELOG (used by the release workflow) |
+| `npm run site:build` / `npm run site:serve` | Build / preview the GitHub Pages site (`site/dist`) |
+| `node scripts/site-og.mjs` | Re-render the social card `site/src/og.png` (needs Chromium) |
 
 ## Pull requests
 
@@ -35,7 +37,7 @@ Requirements: Node ≥ 20 (CI uses 22). Docker is only needed for the image smok
 
 ## Releases
 
-`release.yml` (manual, choose bump) commits the version + changelog and pushes a `vX.Y.Z` tag. The tag triggers `publish-npm.yml` (npmjs via Trusted Publishing with provenance, plus GitHub Packages) and `publish-image.yml` (multi-arch image on GHCR). `release-on-green.yml` drafts the GitHub Release. See `docs/DEPLOY.md` for the one-time npm Trusted Publisher setup.
+`release.yml` (manual, choose bump) commits the version + changelog and pushes a `vX.Y.Z` tag. The tag triggers `publish-npm.yml` (npmjs via Trusted Publishing with provenance, plus GitHub Packages) and `publish-image.yml` (multi-arch image on GHCR). `release-on-green.yml` drafts the GitHub Release and moves the floating `v0` tag used by the GitHub Action. `pages.yml` redeploys the project site on pushes to `main` and on published releases.
 
 ## Layout
 
@@ -46,7 +48,10 @@ src/providers/        playwright (local + CDP), steel, kernel
 src/service/          config, runner, HTTP server, live-view proxy, serialization
 src/client/           AgentRunnerClient (no Playwright)
 src/protocol.ts       wire types + routes
-src/cli.ts            serve / health / probe
-examples/             demo strategy module
+src/cli.ts            serve / health / probe / post (--local runs in-process)
+src/attribution.ts    project identity surfaced in /healthz, Server header, CLI
+action.yml            composite GitHub Action (probe | post)
+examples/             demo strategy module + session fixture
+site/                 GitHub Pages source (site/src) and build output (site/dist, ignored)
 __tests__/            unit (default) and browser/ (Chromium) suites
 ```
