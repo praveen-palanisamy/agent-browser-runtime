@@ -19,22 +19,28 @@ export const PROJECT = {
 
 let cachedVersion: string | undefined;
 
-/** Version from the installed package.json (works from src/ and dist/). */
+/**
+ * Version from the nearest package.json (works from src/ and dist/, and from
+ * vendored/forked copies where the package name differs).
+ */
 export function packageVersion(): string {
   if (cachedVersion) return cachedVersion;
+  let fallback: string | undefined;
   for (const rel of ['../package.json', '../../package.json']) {
     try {
       const raw = readFileSync(path.join(__dirname, rel), 'utf8');
       const parsed = JSON.parse(raw) as { name?: string; version?: string };
-      if (parsed.name === PROJECT.npm && parsed.version) {
+      if (!parsed.version) continue;
+      if (parsed.name === PROJECT.npm) {
         cachedVersion = parsed.version;
         return cachedVersion;
       }
+      fallback ??= parsed.version;
     } catch {
       // try next candidate
     }
   }
-  cachedVersion = '0.0.0';
+  cachedVersion = fallback ?? '0.0.0';
   return cachedVersion;
 }
 
