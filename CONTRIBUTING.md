@@ -23,6 +23,7 @@ Requirements: Node ≥ 20 (CI uses 22). Docker is only needed for the image smok
 | `npm run lint` / `npm run format` | Biome check / fix |
 | `npm run typecheck` / `npm run build` | tsc |
 | `node scripts/check-playwright-pin.mjs` | Dockerfile base image == locked `playwright-core` |
+| `node scripts/check-action-manifest.mjs` | `action.yml` satisfies GitHub Marketplace listing rules |
 | `node scripts/release.mjs --bump=patch` | Bump version + CHANGELOG (used by the release workflow) |
 | `npm run site:build` / `npm run site:serve` | Build / preview the GitHub Pages site (`site/dist`) |
 | `node scripts/site-og.mjs` | Re-render the social card `site/src/og.png` (needs Chromium) |

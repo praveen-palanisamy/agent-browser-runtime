@@ -74,7 +74,7 @@
     "test": "vitest run",
     "test:browser": "ABR_TEST_SUITE=browser vitest run",
     "browsers:install": "npx playwright-core install chromium",
-    "ci:check": "npm run lint && npm run typecheck && npm test && node scripts/check-playwright-pin.mjs",
+    "ci:check": "npm run lint && npm run typecheck && npm test && node scripts/check-playwright-pin.mjs && node scripts/check-action-manifest.mjs",
     "pack:check": "npm pack --dry-run",
     "release:prepare": "node scripts/release.mjs",
     "prepublishOnly": "npm run build",

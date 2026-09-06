@@ -1,8 +1,7 @@
 name: "Agent Browser Runtime (ABR)"
 description: >-
-  Run authenticated browser jobs as the user from CI: probe whether a stored
-  browser session is still signed in, or execute a WebPostStrategy job with it.
-  Self-hosted, Playwright-powered, no browser vendor lock-in.
+  Run authenticated browser jobs as the user from CI: probe a stored session or
+  execute a WebPostStrategy with it. Self-hosted.
 author: "Praveen Palanisamy"
 branding:
   icon: "globe"
