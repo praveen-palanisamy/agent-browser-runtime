@@ -4,7 +4,11 @@
 
 [![ci](https://github.com/praveen-palanisamy/agent-browser-runtime/actions/workflows/ci.yml/badge.svg)](https://github.com/praveen-palanisamy/agent-browser-runtime/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@praveen-palanisamy/agent-browser-runtime)](https://www.npmjs.com/package/@praveen-palanisamy/agent-browser-runtime)
+[![ghcr](https://img.shields.io/badge/ghcr.io-agent--browser--runtime-blue?logo=docker)](https://github.com/praveen-palanisamy/agent-browser-runtime/pkgs/container/agent-browser-runtime)
+[![action](https://img.shields.io/badge/GitHub%20Action-%40v0-2088FF?logo=githubactions&logoColor=white)](docs/GITHUB_ACTION.md)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+**Website:** [praveen-palanisamy.github.io/agent-browser-runtime](https://praveen-palanisamy.github.io/agent-browser-runtime/) · **Source:** [github.com/praveen-palanisamy/agent-browser-runtime](https://github.com/praveen-palanisamy/agent-browser-runtime)
 
 `agent-browser-runtime` is a small, self-hostable runtime for **stateful, secure browser-session execution**. You capture a user's authenticated session once (they sign in inside a live view; you never see a password), store it encrypted in *your* database, and from then on any scheduled or event-driven job can open a fresh isolated browser, inject that session, drive the site's real UI with verification, and hand back the rotated cookies — without the user's laptop being online and without a developer API.
 
@@ -190,6 +194,23 @@ Configuration is environment-driven ([`.env.example`](.env.example)). Job and ca
 
 ## Deploy
 
+Pick the channel that fits your stack — all three are published from every release:
+
+| Channel | Use it when |
+|---------|-------------|
+| **npm** `@praveen-palanisamy/agent-browser-runtime` | you embed the library or the Playwright-free client in your app |
+| **GHCR** `ghcr.io/praveen-palanisamy/agent-browser-runtime` | you run the HTTP runner service (Chromium included) |
+| **GitHub Action** `praveen-palanisamy/agent-browser-runtime@v0` | you want session probes or jobs straight from CI — see [`docs/GITHUB_ACTION.md`](docs/GITHUB_ACTION.md) |
+
+```yaml
+- uses: praveen-palanisamy/agent-browser-runtime@v0
+  with:
+    command: probe
+    platform: expense-portal
+    strategies: ./automation/strategies.js
+    session: ${{ secrets.EXPENSE_PORTAL_SESSION }}
+```
+
 - **Local**: `docker compose up` (Steel + runtime; mount strategies via `STRATEGIES_DIR`).
 - **Container**: `ghcr.io/praveen-palanisamy/agent-browser-runtime` — extend it with your strategies module (see [`Dockerfile`](Dockerfile)). The Playwright base image and `playwright-core` are pinned to the same version so no browser downloads happen at runtime.
 - **Cloud Run / ECS / Nomad**: run the runtime with Steel as a sidecar; pin to one instance per active interactive capture (captures are stateful), scale headless jobs freely. See [`docs/DEPLOY.md`](docs/DEPLOY.md).
@@ -205,7 +226,8 @@ Configuration is environment-driven ([`.env.example`](.env.example)). Job and ca
 ## Documentation
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — contracts, lifecycle, verification model
-- [`docs/DEPLOY.md`](docs/DEPLOY.md) — providers, environment, Cloud Run / compose patterns
+- [`docs/DEPLOY.md`](docs/DEPLOY.md) — providers, environment, Cloud Run / compose patterns, distribution channels
+- [`docs/GITHUB_ACTION.md`](docs/GITHUB_ACTION.md) — run probes and jobs from GitHub Actions
 - [`docs/AGENTS.md`](docs/AGENTS.md) — notes for coding agents and LLM tool builders
 - [`CHANGELOG.md`](CHANGELOG.md) · [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
@@ -217,6 +239,15 @@ npm run ci:check       # lint + typecheck + unit tests + pin check (what CI runs
 npm run test:browser   # real Chromium smoke (npm run browsers:install first)
 ```
 
-## License
+## License & attribution
 
-MIT
+MIT © [Praveen Palanisamy](https://github.com/praveen-palanisamy). If ABR is useful to you, keep the link back to the [source repository](https://github.com/praveen-palanisamy/agent-browser-runtime) in your forks and derived work, and cite it as:
+
+```bibtex
+@software{palanisamy_agent_browser_runtime,
+  author = {Palanisamy, Praveen},
+  title  = {Agent Browser Runtime (ABR): stateful, secure browser-session execution for agents},
+  url    = {https://github.com/praveen-palanisamy/agent-browser-runtime},
+  license = {MIT}
+}
+```

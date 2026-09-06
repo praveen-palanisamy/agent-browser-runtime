@@ -14,6 +14,7 @@ import {
   type ServerResponse,
   createServer,
 } from 'node:http';
+import { PROJECT, packageVersion, userAgentString } from '../attribution';
 import { RUNNER_ROUTES } from '../protocol';
 import { handleLiveHttp, handleLiveUpgrade } from './live-proxy';
 import type { AgentRunner } from './runner';
@@ -30,7 +31,10 @@ export class HttpError extends Error {
 }
 
 function json(res: ServerResponse, status: number, body: unknown): void {
-  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.writeHead(status, {
+    'Content-Type': 'application/json',
+    Server: userAgentString(),
+  });
   res.end(JSON.stringify(body));
 }
 
@@ -86,6 +90,9 @@ export function createRunnerServer(runner: AgentRunner): Server {
       if (req.method === 'GET' && url.pathname === RUNNER_ROUTES.health) {
         json(res, 200, {
           ok: true,
+          name: PROJECT.name,
+          version: packageVersion(),
+          repository: PROJECT.repository,
           jobProvider: config.jobProvider,
           captureProvider: config.captureProvider,
           activeCaptures: runner.capture.size,

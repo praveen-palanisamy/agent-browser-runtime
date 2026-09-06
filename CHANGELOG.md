@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-- (add changes here)
+- **CLI**: new `post` command; `--local` runs `probe`/`post` in-process with local Chromium (no service needed); `--session-out`, `--out`, `--content`, `version`.
+- **GitHub Action**: `praveen-palanisamy/agent-browser-runtime@v0` composite action (`command: probe|post`) with `ok` / `authenticated` / `needs-reauth` / `uncertain` outputs; floating major tag maintained by `release-on-green`.
+- **Attribution**: `/healthz` reports `name`, `version`, `repository`; `Server` header on all JSON responses.
+- **Docs & site**: project website on GitHub Pages (auto-deployed on releases), `docs/GITHUB_ACTION.md`, distribution-channel table in `docs/DEPLOY.md`; README use cases and examples reworked around an expense-portal assistant.
 
 ## v0.1.0 — 2026-09-06
 

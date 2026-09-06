@@ -49,6 +49,50 @@ jobs:
         run: npx playwright-core install --with-deps chromium
       - name: Browser tests
         run: npm run test:browser
+      - name: CLI in-process job (same path the GitHub Action takes)
+        env:
+          AGENT_RUNNER_PACING: "false"
+        run: |
+          npm run build
+          node dist/cli.js post --local --platform demo \
+            --strategies examples/demo-strategy/index.js \
+            --session examples/demo-strategy/session.json \
+            --text "ci smoke" --session-out /tmp/refreshed.json --out /tmp/result.json
+          test -s /tmp/refreshed.json
+          node dist/cli.js probe --local --platform demo \
+            --strategies examples/demo-strategy/index.js \
+            --session examples/demo-strategy/session.json
+
+  # The composite GitHub Action must work exactly as consumers use it
+  # (`uses: praveen-palanisamy/agent-browser-runtime@v0`).
+  action:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - name: Probe with the bundled demo strategy
+        id: probe
+        uses: ./
+        with:
+          command: probe
+          platform: demo
+          session-file: examples/demo-strategy/session.json
+          pacing: "false"
+      - name: Post with the bundled demo strategy
+        id: post
+        uses: ./
+        with:
+          command: post
+          platform: demo
+          session-file: examples/demo-strategy/session.json
+          text: "hello from the ABR action"
+          pacing: "false"
+      - name: Assert outputs
+        run: |
+          test "${{ steps.probe.outputs.authenticated }}" = "true"
+          test "${{ steps.post.outputs.ok }}" = "true"
+          test -s "${{ steps.post.outputs.session-file }}"
+          cat "${{ steps.post.outputs.result-file }}"
 
   # The published container image must at least build and answer /healthz.
   image:

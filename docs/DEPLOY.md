@@ -1,4 +1,4 @@
-# Deploying the runner
+# Deploying and integrating ABR
 
 ## Environment
 
@@ -50,12 +50,12 @@ The same shape works on ECS/Fargate task definitions or a Nomad group.
 - Move captures to **Kernel** (`AGENT_RUNNER_CAPTURE_PROVIDER=kernel`): each capture gets its own microVM with a live view URL, so instances become interchangeable.
 - Or run several runner instances and route `/v1/capture/finish|cancel` and `/live/{captureId}` by capture id (hash or header) at the load balancer.
 
-## npm Trusted Publishing (one-time)
+## Ways to consume ABR
 
-On npmjs.com → package → Settings → *Trusted Publisher*: GitHub Actions, repository `praveen-palanisamy/agent-browser-runtime`, workflow `publish-npm.yml`. No `NPM_TOKEN` secret is needed; `publish-npm.yml` publishes with `--provenance`. GitHub Packages publishing uses the built-in `GITHUB_TOKEN`.
+| Channel | Best for | Pin |
+|---------|----------|-----|
+| [npm `@praveen-palanisamy/agent-browser-runtime`](https://www.npmjs.com/package/@praveen-palanisamy/agent-browser-runtime) | embedding the library or client in your app | `^0.1` |
+| [GHCR `ghcr.io/praveen-palanisamy/agent-browser-runtime`](https://github.com/praveen-palanisamy/agent-browser-runtime/pkgs/container/agent-browser-runtime) | running the runner service (Chromium included) | `:0.1`, `:latest` |
+| [GitHub Action](GITHUB_ACTION.md) | probes and jobs from CI without a service | `@v0` |
 
-## Release flow
-
-1. Actions → **release** → choose bump → run. Commits `chore(release): vX.Y.Z` and pushes the tag.
-2. Tag triggers **publish-npm** (npmjs + GitHub Packages) and **publish-image** (GHCR, amd64 + arm64).
-3. **release-on-green** drafts the GitHub Release with generated notes; publish it from the Releases page.
+Releases are cut automatically from `main`; every semver tag publishes all three channels with provenance. Follow the [Releases page](https://github.com/praveen-palanisamy/agent-browser-runtime/releases) or watch the [changelog](../CHANGELOG.md).

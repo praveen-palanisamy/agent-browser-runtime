@@ -1,7 +1,10 @@
 name: release-on-green
 
-# After CI passes on main: if package.json's version has no git tag yet,
-# create the tag and draft a GitHub Release (which fans out to npm + GHCR).
+# After CI passes on main:
+#  1. keep the floating GitHub Action tag (`v0`, `uses: …/agent-browser-runtime@v0`)
+#     pointing at the latest green commit;
+#  2. if package.json's version has no git tag yet, create the tag and draft a
+#     GitHub Release (which fans out to npm + GHCR + the project site).
 
 on:
   workflow_run:
@@ -21,6 +24,13 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
+      - name: Update floating major tag for the GitHub Action
+        run: |
+          MAJOR="v$(node -p "require('./package.json').version.split('.')[0]")"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f "$MAJOR" "${{ github.event.workflow_run.head_sha }}"
+          git push origin "refs/tags/$MAJOR" --force
       - name: Tag + draft release when missing
         env:
           GH_TOKEN: ${{ github.token }}

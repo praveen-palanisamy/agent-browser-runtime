@@ -1,0 +1,186 @@
+name: "Agent Browser Runtime (ABR)"
+description: >-
+  Run authenticated browser jobs as the user from CI: probe whether a stored
+  browser session is still signed in, or execute a WebPostStrategy job with it.
+  Self-hosted, Playwright-powered, no browser vendor lock-in.
+author: "Praveen Palanisamy"
+branding:
+  icon: "globe"
+  color: "purple"
+
+inputs:
+  command:
+    description: "`probe` (is the session still authenticated?) or `post` (run a job)"
+    required: false
+    default: "probe"
+  platform:
+    description: "Platform id handled by one of the strategies in `strategies`"
+    required: true
+  session:
+    description: >-
+      Serialized AgentSessionState JSON (store it as an encrypted secret and
+      pass `${{ secrets.MY_SESSION }}`). Alternatively set `session-file`.
+    required: false
+    default: ""
+  session-file:
+    description: "Path to a file containing AgentSessionState JSON (alternative to `session`)"
+    required: false
+    default: ""
+  strategies:
+    description: >-
+      Path (relative to the workspace) of a CommonJS/ESM module exporting
+      WebPostStrategy[]. Defaults to the bundled example strategy.
+    required: false
+    default: ""
+  text:
+    description: "Post text (`post` only)"
+    required: false
+    default: ""
+  media:
+    description: "Comma-separated media URLs (`post` only)"
+    required: false
+    default: ""
+  link:
+    description: "Link to attach (`post` only)"
+    required: false
+    default: ""
+  content-file:
+    description: "Path to an AgentPostContent JSON file (overrides text/media/link)"
+    required: false
+    default: ""
+  workspace:
+    description: "Workspace id used for the job identity"
+    required: false
+    default: "github-actions"
+  account:
+    description: "Account id used for the job identity"
+    required: false
+    default: "default"
+  session-out:
+    description: "Where to write the refreshed session state (persist it back to your vault)"
+    required: false
+    default: ".abr/session.refreshed.json"
+  result-out:
+    description: "Where to write the JSON result"
+    required: false
+    default: ".abr/result.json"
+  fail-on-reauth:
+    description: "Fail the step when the session needs re-authentication"
+    required: false
+    default: "true"
+  pacing:
+    description: "Apply human-pace jitter before acting (`true`/`false`)"
+    required: false
+    default: "true"
+  node-version:
+    description: "Node.js version to run the runtime with"
+    required: false
+    default: "22"
+
+outputs:
+  result-file:
+    description: "Path of the JSON result"
+    value: ${{ steps.run.outputs.result-file }}
+  session-file:
+    description: "Path of the refreshed session (may not exist if nothing changed)"
+    value: ${{ steps.run.outputs.session-file }}
+  ok:
+    description: "`true` when a `post` job verified success"
+    value: ${{ steps.run.outputs.ok }}
+  authenticated:
+    description: "`true` when the session is still signed in (`probe`, or auth stage of `post`)"
+    value: ${{ steps.run.outputs.authenticated }}
+  needs-reauth:
+    description: "`true` when the user must sign in again"
+    value: ${{ steps.run.outputs.needs-reauth }}
+  uncertain:
+    description: "`true` when the action ran but could not be verified — never retry blindly"
+    value: ${{ steps.run.outputs.uncertain }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Install Agent Browser Runtime (from this action's ref)
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd "${GITHUB_ACTION_PATH}"
+        npm ci --no-audit --no-fund --ignore-scripts
+        npm run build
+        npx playwright-core install --with-deps chromium
+
+    - name: Run ABR job
+      id: run
+      shell: bash
+      env:
+        ABR_SESSION_JSON: ${{ inputs.session }}
+        AGENT_RUNNER_PACING: ${{ inputs.pacing }}
+      run: |
+        set -euo pipefail
+        ABR="node ${GITHUB_ACTION_PATH}/dist/cli.js"
+        mkdir -p "$(dirname "${{ inputs.session-out }}")" "$(dirname "${{ inputs.result-out }}")"
+
+        if [ -n "${{ inputs.session-file }}" ]; then
+          SESSION_FILE="${{ inputs.session-file }}"
+        elif [ -n "$ABR_SESSION_JSON" ]; then
+          SESSION_FILE="$(mktemp)"
+          printf '%s' "$ABR_SESSION_JSON" > "$SESSION_FILE"
+        else
+          echo "::error::Provide either 'session' or 'session-file'"; exit 1
+        fi
+
+        STRATEGIES="${{ inputs.strategies }}"
+        if [ -z "$STRATEGIES" ]; then
+          STRATEGIES="${GITHUB_ACTION_PATH}/examples/demo-strategy/index.js"
+        fi
+
+        CONTENT_FLAGS=()
+        if [ "${{ inputs.command }}" = "post" ]; then
+          if [ -n "${{ inputs.content-file }}" ]; then
+            CONTENT_FLAGS=(--content "${{ inputs.content-file }}")
+          else
+            CONTENT_FLAGS=(--text "${{ inputs.text }}")
+            [ -n "${{ inputs.media }}" ] && CONTENT_FLAGS+=(--media "${{ inputs.media }}")
+            [ -n "${{ inputs.link }}" ] && CONTENT_FLAGS+=(--link "${{ inputs.link }}")
+          fi
+        fi
+
+        set +e
+        $ABR "${{ inputs.command }}" --local \
+          --strategies "$STRATEGIES" \
+          --platform "${{ inputs.platform }}" \
+          --session "$SESSION_FILE" \
+          --workspace "${{ inputs.workspace }}" --account "${{ inputs.account }}" \
+          --session-out "${{ inputs.session-out }}" \
+          --out "${{ inputs.result-out }}" \
+          "${CONTENT_FLAGS[@]}"
+        CODE=$?
+        set -e
+
+        [ -n "$ABR_SESSION_JSON" ] && rm -f "$SESSION_FILE"
+
+        RESULT="${{ inputs.result-out }}"
+        echo "result-file=$RESULT" >> "$GITHUB_OUTPUT"
+        echo "session-file=${{ inputs.session-out }}" >> "$GITHUB_OUTPUT"
+        if [ -f "$RESULT" ]; then
+          node -e '
+            const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+            const out = [
+              ["ok", r.ok === true],
+              ["authenticated", r.authenticated === true || (r.ok === true) || (r.ok === false && r.failureStage && r.failureStage !== "auth" && r.failureStage !== "precheck")],
+              ["needs-reauth", r.needsReauth === true || (r.authenticated === false)],
+              ["uncertain", r.uncertain === true],
+            ];
+            require("fs").appendFileSync(process.env.GITHUB_OUTPUT, out.map(([k, v]) => `${k}=${v}\n`).join(""));
+          ' "$RESULT"
+        fi
+
+        if [ "$CODE" -eq 2 ] && [ "${{ inputs.fail-on-reauth }}" != "true" ] && grep -q '"needsReauth": true\|"authenticated": false' "$RESULT" 2>/dev/null; then
+          echo "::warning::Session needs re-authentication (fail-on-reauth=false)"; exit 0
+        fi
+        exit $CODE

@@ -3,18 +3,28 @@
   "version": "0.1.0",
   "description": "Stateful, secure browser-session execution for agents: pluggable browser providers (local Chromium, CDP, Steel, Kernel), post/probe/capture orchestration, an HTTP runner service and a Playwright-free client",
   "keywords": [
-    "browser-automation",
-    "playwright",
-    "cdp",
-    "steel-browser",
-    "kernel",
     "agents",
+    "ai-agents",
+    "authenticated-sessions",
+    "browser-agent",
+    "browser-automation",
+    "cdp",
+    "github-action",
+    "headless-chrome",
+    "kernel",
+    "kernel-browsers",
+    "playwright",
+    "rpa",
+    "self-hosted",
     "session",
-    "self-hosted"
+    "steel",
+    "steel-browser",
+    "storage-state",
+    "web-automation"
   ],
   "license": "MIT",
   "author": "Praveen Palanisamy",
-  "homepage": "https://github.com/praveen-palanisamy/agent-browser-runtime#readme",
+  "homepage": "https://praveen-palanisamy.github.io/agent-browser-runtime/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/praveen-palanisamy/agent-browser-runtime.git"
@@ -41,7 +51,15 @@
       "default": "./dist/service/index.js"
     }
   },
-  "files": ["dist", "docs", "examples", "README.md", "CHANGELOG.md", "LICENSE"],
+  "files": [
+    "dist",
+    "docs",
+    "examples",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "action.yml"
+  ],
   "engines": {
     "node": ">=20"
   },
@@ -59,7 +77,9 @@
     "ci:check": "npm run lint && npm run typecheck && npm test && node scripts/check-playwright-pin.mjs",
     "pack:check": "npm pack --dry-run",
     "release:prepare": "node scripts/release.mjs",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "site:build": "node scripts/site-build.mjs",
+    "site:serve": "node scripts/site-build.mjs && npx -y serve site/dist"
   },
   "dependencies": {
     "playwright-core": "^1.57.0"
@@ -69,5 +89,6 @@
     "@types/node": "^22.15.21",
     "typescript": "^5.3.0",
     "vitest": "^3.2.4"
-  }
+  },
+  "funding": "https://github.com/sponsors/praveen-palanisamy"
 }
