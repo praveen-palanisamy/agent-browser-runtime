@@ -29,6 +29,9 @@ A runtime that lets software act inside a user's authenticated browser session, 
 - `@praveen-palanisamy/agent-browser-runtime` — contracts (`SessionStore`, `SessionProvider`, `WebPostStrategy`, `AgentSessionState`, `AgentPostResult`), `AgentPoster`, `SessionCaptureManager`, providers, `AgentRunnerClient`, protocol types.
 - `…/client` — `AgentRunnerClient` + protocol only (no Playwright).
 - `…/service` — `startRunner`, `AgentRunner`, `loadConfig`, `createRunnerServer`.
+- CLI `agent-browser-runtime` — `serve`, `health`, `probe`, `post`; `--local` runs probe/post in-process (no service). Exit codes: `0` ok · `2` not authenticated / failed · `3` uncertain.
+- GitHub Action `praveen-palanisamy/agent-browser-runtime@v0` — `command: probe|post`, outputs `ok`, `authenticated`, `needs-reauth`, `uncertain`, `result-file`, `session-file` (see `docs/GITHUB_ACTION.md`).
+- `GET /healthz` returns `{ name, version, repository, jobProvider, captureProvider, activeCaptures }`; every JSON response carries a `Server: agent-browser-runtime/<version> (+repo)` header.
 
 Wire protocol routes and request/response shapes live in `src/protocol.ts`; treat them as the contract when generating client code in other languages.
 

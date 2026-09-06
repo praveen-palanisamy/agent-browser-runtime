@@ -124,6 +124,14 @@ AGENT_RUNNER_TOKEN=$(openssl rand -base64 32) \
   npx agent-browser-runtime serve --strategies ./strategies.js
 ```
 
+No service at all? The CLI can run a single job in-process with local Chromium — the same path the [GitHub Action](docs/GITHUB_ACTION.md) uses:
+
+```bash
+npx agent-browser-runtime post --local --strategies ./strategies.js \
+  --platform expense-portal --session ./session.json \
+  --text "March travel" --session-out ./session.json      # refreshed cookies written back
+```
+
 ### 3. Call it from anywhere (no Playwright needed)
 
 The orchestrator can be a cron job, a queue worker, or a serverless function — it never loads Playwright.
