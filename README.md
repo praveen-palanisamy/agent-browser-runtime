@@ -15,7 +15,7 @@ It is the missing layer between "I have Playwright" and "I can run unattended, p
 | Platforms without a (usable/affordable) API | Ability to drive the real web UI with the user's own session |
 | Sessions live on the user's machine | Portable `storageState` you persist encrypted; runs on your servers |
 | Cookies rotate, sessions expire | Every job returns the refreshed session; `needsReauth` is a first-class outcome |
-| "Did it actually post?" | Strategies must verify; `uncertain` results are separated from failures so you never double-act |
+| "Did the action actually happen?" | Strategies must verify; `uncertain` results are separated from failures so you never double-act |
 | Browser infra is painful | One `SessionProvider` contract over local Chromium, any CDP endpoint, self-hosted [Steel](https://github.com/steel-dev/steel-browser), or [Kernel](https://www.kernel.sh) microVMs |
 | Serverless can't run Chromium | An HTTP runner service + a Playwright-free client for functions, queues, and cron |
 | Users need to sign in somewhere safe | Interactive capture with an embeddable, proxied live view and unguessable, expiring capture ids |
@@ -24,11 +24,13 @@ No browser engine is reinvented here: the runtime orchestrates proven engines (P
 
 ## Use cases
 
-- **Social publishing as the user** — schedule posts to platforms whose APIs are metered or closed; fall back to the API only when the session is gone.
-- **Autonomous assistants** that file expense reports, update CRMs, or download statements from portals with no API.
-- **Per-tenant SaaS automations** where each customer's session must stay isolated and encrypted under your keys.
+- **Autonomous assistants** that file expense reports, submit timesheets, update CRMs, or fetch statements from portals that have no API.
+- **Back-office automation for SaaS** — act inside each customer's vendor, bank, marketplace, or government portal with that customer's own session, isolated and encrypted under your keys.
 - **Agent frameworks / MCP tools** that need a durable "act on behalf of this user" primitive with re-auth signalling instead of silent failures.
+- **Scheduled, user-authorized publishing** to systems that expose no automation surface — where the user has explicitly authorized each action and the platform's terms permit it; fall back to an official API when one exists and the session is gone.
 - **Health probes** that tell users *before* a scheduled job fails that they need to sign in again.
+
+ABR gives you the execution primitive; you remain responsible for using it only with the user's explicit authorization and within each target site's terms of service.
 
 ## How it fits together
 
@@ -64,27 +66,42 @@ npx playwright-core install chromium        # local provider
 
 ### 1. Describe a platform (`WebPostStrategy`)
 
+Example: an AI finance assistant files expense reports in a corporate portal that has no API. The user signed in once; every month the assistant submits the report with receipts attached and only reports success when the portal shows a claim number.
+
 ```ts
 import type { WebPostStrategy } from '@praveen-palanisamy/agent-browser-runtime';
 
-export const noteStrategy: WebPostStrategy = {
-  platform: 'notes-app',
-  loginUrl: 'https://notes.example/login',
-  validate: (c) => (c.text.length > 500 ? 'Too long' : null),
+export const expensePortal: WebPostStrategy = {
+  platform: 'expense-portal',
+  loginUrl: 'https://expenses.corp.example/login',
+
+  validate: (c) =>
+    !c.text ? 'Description required'
+    : (c.mediaUrls?.length ?? 0) === 0 ? 'At least one receipt required'
+    : null,
+
   async isAuthenticated(ctx) {
     const page = await ctx.newPage();
-    await page.goto('https://notes.example/');
-    return page.locator('[data-testid="avatar"]').isVisible();
+    await page.goto('https://expenses.corp.example/');
+    return page.getByRole('button', { name: 'New claim' }).isVisible();
   },
+
   async post(ctx, content) {
     const page = await ctx.newPage();
-    await page.goto('https://notes.example/new');
-    await page.fill('textarea', content.text);
-    await page.click('button[type=submit]');
-    const url = await page.locator('a.permalink').getAttribute('href');
-    return url
-      ? { ok: true, platformPostUrl: url, verification: 'toast' }
-      : { ok: false, uncertain: true, failureStage: 'verify' };
+    await page.goto('https://expenses.corp.example/claims/new');
+    await page.getByLabel('Description').fill(content.text);
+    for (const receipt of content.mediaUrls ?? []) {
+      await page.getByLabel('Receipt').setInputFiles(await download(receipt));
+    }
+    // Pre-submit assert: the form shows exactly what we intend to file.
+    if ((await page.getByLabel('Description').inputValue()) !== content.text) {
+      return { ok: false, failureStage: 'compose', error: 'Description mismatch' };
+    }
+    await page.getByRole('button', { name: 'Submit claim' }).click();
+    const claim = await page.getByTestId('claim-number').textContent({ timeout: 15_000 }).catch(() => null);
+    return claim
+      ? { ok: true, platformPostId: claim, platformPostUrl: page.url(), verification: 'toast' }
+      : { ok: false, uncertain: true, failureStage: 'verify', error: 'No claim number shown' };
   },
 };
 ```
@@ -93,7 +110,7 @@ export const noteStrategy: WebPostStrategy = {
 
 ```ts
 import { startRunner } from '@praveen-palanisamy/agent-browser-runtime/service';
-startRunner({ strategies: [noteStrategy] });
+startRunner({ strategies: [expensePortal] });
 ```
 
 or with the CLI and a module exporting `WebPostStrategy[]` (see [`examples/demo-strategy`](examples/demo-strategy/index.js)):
@@ -105,26 +122,33 @@ AGENT_RUNNER_TOKEN=$(openssl rand -base64 32) \
 
 ### 3. Call it from anywhere (no Playwright needed)
 
+The orchestrator can be a cron job, a queue worker, or a serverless function — it never loads Playwright.
+
 ```ts
 import { AgentRunnerClient } from '@praveen-palanisamy/agent-browser-runtime/client';
 
 const runner = new AgentRunnerClient({ baseUrl, token });
 
-// one-time: user signs in inside the live view you embed
-const { captureId, liveViewUrl } = await runner.captureStart({ platform: 'notes-app' });
-// ... user finishes ...
+// One-time: the employee signs in inside the live view you embed in your app.
+const { captureId, liveViewUrl } = await runner.captureStart({ platform: 'expense-portal' });
+// ... show liveViewUrl in an iframe; the user completes login (and MFA) ...
 const done = await runner.captureFinish({ captureId });
-if (done.ok) await vault.save(userId, encrypt(done.state));
+if (done.ok) await vault.save(userId, encrypt(done.state));   // your encrypted store
 
-// later, unattended
+// Monthly, unattended: file the report the assistant prepared.
 const res = await runner.post({
-  workspaceId, accountId, platform: 'notes-app', jobId,
+  workspaceId: orgId, accountId: userId, platform: 'expense-portal', jobId,
   session: decrypt(await vault.load(userId)),
-  content: { text: 'hello' },
+  content: {
+    text: 'March travel — client onsite, 3 nights',
+    mediaUrls: receipts.map((r) => r.signedUrl),
+  },
 });
-if (res.refreshedSession) await vault.save(userId, encrypt(res.refreshedSession));
-if (res.needsReauth) notifyUserToReauthorize();
-if (res.uncertain) flagForManualReview();   // never retry blindly
+
+if (res.refreshedSession) await vault.save(userId, encrypt(res.refreshedSession)); // rotated cookies
+if (res.ok) ledger.record({ claim: res.platformPostId, url: res.platformPostUrl });
+if (res.needsReauth) notify(userId, 'Please sign in to the expense portal again');
+if (res.uncertain) queueManualReview(jobId);   // submitted but unconfirmed — never retry blindly
 ```
 
 ### Library-only (no HTTP)
@@ -135,8 +159,8 @@ import { AgentPoster, SteelSessionProvider } from '@praveen-palanisamy/agent-bro
 const poster = new AgentPoster(
   new SteelSessionProvider({ baseUrl: 'http://steel:3000' }),
   myEncryptedStore
-).register(noteStrategy);
-await poster.post({ workspaceId, accountId, platform: 'notes-app', content: { text } });
+).register(expensePortal);
+await poster.post({ workspaceId, accountId, platform: 'expense-portal', content: { text, mediaUrls } });
 ```
 
 ## Contracts
