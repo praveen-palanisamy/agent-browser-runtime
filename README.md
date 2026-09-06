@@ -1,6 +1,6 @@
-# agent-browser-runtime
+# ABR: Agent Browser Runtime
 
-**Let your agent act as the user — in their own logged-in browser session — on infrastructure you control.**
+**Let your agent act as the user - in their own logged-in browser session - on infrastructure you control.**
 
 [![ci](https://github.com/praveen-palanisamy/agent-browser-runtime/actions/workflows/ci.yml/badge.svg)](https://github.com/praveen-palanisamy/agent-browser-runtime/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@praveen-palanisamy/agent-browser-runtime)](https://www.npmjs.com/package/@praveen-palanisamy/agent-browser-runtime)
@@ -10,9 +10,9 @@
 
 It is the missing layer between "I have Playwright" and "I can run unattended, per-user, authenticated browser jobs in production":
 
-| Problem | What the runtime gives you |
+| Problem | What ABR gives you |
 |---------|----------------------------|
-| Platforms without a (usable/affordable) API | Drive the real web UI with the user's own session |
+| Platforms without a (usable/affordable) API | Ability to drive the real web UI with the user's own session |
 | Sessions live on the user's machine | Portable `storageState` you persist encrypted; runs on your servers |
 | Cookies rotate, sessions expire | Every job returns the refreshed session; `needsReauth` is a first-class outcome |
 | "Did it actually post?" | Strategies must verify; `uncertain` results are separated from failures so you never double-act |
