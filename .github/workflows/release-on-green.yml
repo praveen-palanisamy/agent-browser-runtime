@@ -4,7 +4,8 @@ name: release-on-green
 #  1. keep the floating GitHub Action tag (`v0`, `uses: …/agent-browser-runtime@v0`)
 #     pointing at the latest green commit;
 #  2. if package.json's version has no git tag yet, create the tag and draft a
-#     GitHub Release (which fans out to npm + GHCR + the project site).
+#     GitHub Release. Publishing that draft (one click) fans out to npm, GHCR
+#     and the project site via the `release: published` event.
 
 on:
   workflow_run:
