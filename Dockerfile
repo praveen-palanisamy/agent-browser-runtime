@@ -21,7 +21,7 @@ ARG PLAYWRIGHT_VERSION
 WORKDIR /app
 COPY package.json package-lock.json tsconfig.json ./
 RUN npm pkg set dependencies.playwright-core=${PLAYWRIGHT_VERSION} \
-  && npm install --no-audit --no-fund --omit=optional --ignore-scripts
+  && npm install --no-audit --no-fund --ignore-scripts
 COPY src ./src
 RUN npx tsc -p tsconfig.json && npm prune --omit=dev
 
