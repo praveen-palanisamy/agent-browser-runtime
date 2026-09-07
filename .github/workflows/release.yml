@@ -1,7 +1,10 @@
 name: release
 
-# Manual: bump version + changelog, commit, tag. The tag then triggers
-# publish-npm and publish-image; release-on-green drafts the GitHub Release.
+# Manual: bump version + changelog and commit to main. Do not tag here —
+# tags pushed with GITHUB_TOKEN do not start other workflows, and tagging
+# early would skip release-on-green's draft. After CI is green on this
+# commit, release-on-green creates vX.Y.Z + a draft GitHub Release; you
+# Publish that draft to fan out npm / GHCR / Pages / Marketplace.
 
 on:
   workflow_dispatch:
@@ -29,12 +32,11 @@ jobs:
         run: npm run ci:check
       - name: Bump version + changelog
         run: node scripts/release.mjs --bump=${{ inputs.bump }}
-      - name: Commit + tag + push
+      - name: Commit + push (no tag)
         run: |
           VERSION=$(node -p "require('./package.json').version")
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package.json package-lock.json CHANGELOG.md
           git commit -m "chore(release): v$VERSION"
-          git tag "v$VERSION"
-          git push --follow-tags
+          git push

@@ -36,14 +36,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           VERSION=$(node -p "require('./package.json').version")
           TAG="v${VERSION}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag ${TAG} exists — nothing to do."
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag "$TAG" "${{ github.event.workflow_run.head_sha }}"
+            git push origin "$TAG"
+          else
+            echo "Tag ${TAG} already exists."
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release ${TAG} already exists — nothing to draft."
             exit 0
           fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "$TAG" "${{ github.event.workflow_run.head_sha }}"
-          git push origin "$TAG"
           gh release create "$TAG" --draft --title "agent-browser-runtime v${VERSION}" --generate-notes
+          echo "Drafted ${TAG}."

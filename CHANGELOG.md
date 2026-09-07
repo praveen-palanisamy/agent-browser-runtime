@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- (add changes here)
+
+## v0.1.1 — 2026-09-07
+
+- **Release pipeline**: `release.yml` only bumps and commits; `release-on-green` owns the semver tag + draft GitHub Release after CI is green (so publishing the draft is the single fan-out to npm / GHCR / Pages / Marketplace). Drafts a release even when the tag already exists.
 - **CLI**: new `post` command; `--local` runs `probe`/`post` in-process with local Chromium (no service needed); `--session-out`, `--out`, `--content`, `version`.
 - **GitHub Action**: `praveen-palanisamy/agent-browser-runtime@v0` composite action (`command: probe|post`) with `ok` / `authenticated` / `needs-reauth` / `uncertain` outputs; floating major tag maintained by `release-on-green`.
 - **Attribution**: `/healthz` reports `name`, `version`, `repository`; `Server` header on all JSON responses.

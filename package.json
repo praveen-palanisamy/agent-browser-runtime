@@ -1,6 +1,6 @@
 {
   "name": "@praveen-palanisamy/agent-browser-runtime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Stateful, secure browser-session execution for agents: pluggable browser providers (local Chromium, CDP, Steel, Kernel), post/probe/capture orchestration, an HTTP runner service and a Playwright-free client",
   "keywords": [
     "agents",
