@@ -38,7 +38,7 @@ Requirements: Node ≥ 22 (CI, the Action and `.node-version` use 24 — `fnm us
 
 ## Releases
 
-`release.yml` (manual, choose bump) only commits the version + changelog to `main` (no tag). When `ci` is green, `release-on-green.yml` creates `vX.Y.Z` if needed, drafts the GitHub Release, and moves the floating `v0` Action tag. **Publishing the draft** triggers `publish-npm.yml` (npmjs via Trusted Publishing with provenance, plus GitHub Packages), `publish-image.yml` (multi-arch GHCR) and `pages.yml`. A hand-pushed semver tag also publishes.
+`release.yml` (manual, choose bump) only commits the version + changelog to `main` (no tag). When `ci` is green, `release-on-green.yml` creates `vX.Y.Z` if needed, drafts the GitHub Release, and moves the floating `v0` Action tag. **Publishing the draft** triggers `publish-npm.yml` (npmjs via Trusted Publishing with provenance, plus GitHub Packages) and `publish-image.yml` (multi-arch GHCR). `pages.yml` deploys only from `main` (so it matches the default github-pages environment rule); release bumps already redeploy the site via the `package.json` path filter. A hand-pushed semver tag also publishes packages.
 
 ## Layout
 

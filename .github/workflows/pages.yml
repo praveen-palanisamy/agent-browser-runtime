@@ -1,9 +1,15 @@
 name: pages
 
-# Project site (GitHub Pages). Rebuilt on every push to main, on every
-# published release, and on demand — so the version, docs and llms.txt on the
-# site always match the latest code. Enable once: Settings → Pages → Source:
-# GitHub Actions.
+# Project site (GitHub Pages). Deploys only from `main` so it satisfies the
+# default github-pages environment protection rule (Deployment branches =
+# the default branch). Release publishes do not need a separate Pages run:
+# `release.yml` bumps package.json on main, which already triggers this
+# workflow; the site also reads the latest release from the GitHub API at
+# runtime. Re-run manually via workflow_dispatch if needed.
+#
+# Enable once: Settings → Pages → Source: GitHub Actions.
+# Keep Environments → github-pages → Deployment branches: default branch only
+# (do not add tag rules — tags are not used for Pages deploys).
 
 on:
   push:
@@ -12,11 +18,10 @@ on:
       - "site/**"
       - "docs/**"
       - "README.md"
+      - "CHANGELOG.md"
       - "package.json"
       - "scripts/site-build.mjs"
       - ".github/workflows/pages.yml"
-  release:
-    types: [published]
   workflow_dispatch: {}
 
 permissions:
