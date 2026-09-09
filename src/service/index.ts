@@ -8,7 +8,7 @@
  * `WebPostStrategy` implementations it wants to expose.
  */
 
-import type { WebPostStrategy } from '../core/types';
+import type { AuditSink, WebPostStrategy } from '../core/types';
 import { loadConfig } from './config';
 import { AgentRunner, type ProviderFactory } from './runner';
 import { createRunnerServer } from './server';
@@ -32,12 +32,18 @@ export type StartRunnerOptions = {
   strategies: WebPostStrategy[];
   env?: NodeJS.ProcessEnv;
   providerFactory?: ProviderFactory;
+  audit?: AuditSink;
   onListening?: (info: { port: number }) => void;
 };
 
 export function startRunner(opts: StartRunnerOptions) {
   const config = loadConfig(opts.env ?? process.env);
-  const runner = new AgentRunner(config, opts.strategies, opts.providerFactory);
+  const runner = new AgentRunner(
+    config,
+    opts.strategies,
+    opts.providerFactory,
+    opts.audit
+  );
   const server = createRunnerServer(runner);
   server.listen(config.port, () => {
     console.log(

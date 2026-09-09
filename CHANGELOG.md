@@ -2,7 +2,21 @@
 
 ## Unreleased
 
-- (add changes here)
+- **Session scope**: strategies can declare allowed cookie domains and exact
+  local-storage origins; ABR sanitizes state on import, capture, and refresh.
+- **Execution policy**: strategies independently allow interactive capture and
+  unattended actions; denied attempts produce redacted audit events.
+- **Capture isolation**: capture management is bound to `workspaceId` +
+  `accountId`; live views use a distinct expiring credential that cannot export
+  or cancel a session.
+- **Audit lifecycle**: optional best-effort `AuditSink` for redacted capture,
+  probe, post, expiry, cancellation, and policy-denial events.
+- **Protocol change**: capture start/finish/cancel now require `workspaceId` and
+  `accountId`. Embedding applications must pass the same binding throughout the
+  capture lifecycle.
+- **Policy guidance**: document that an authenticated user session does not
+  authorize automation and that billing, security challenges, identity checks,
+  and legal attestations remain out of scope.
 
 ## v0.1.1 — 2026-09-07
 

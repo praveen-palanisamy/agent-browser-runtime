@@ -31,6 +31,54 @@ export type StorageState = {
 };
 
 /**
+ * Cookie/local-storage boundary enforced when a strategy imports or exports a
+ * session. Domain values are hostnames (for example `app.example.com`); origins
+ * are exact URL origins (for example `https://app.example.com`).
+ */
+export type SessionScope = {
+  cookieDomains: string[];
+  origins: string[];
+  /** Defaults to true. */
+  includeSubdomains?: boolean;
+};
+
+export type StrategyPolicy = {
+  /** Omit only for compatibility with legacy, trusted strategies. */
+  session?: SessionScope;
+  /** Defaults to true. */
+  allowInteractiveCapture?: boolean;
+  /** Defaults to true. Set false for human-only workflows. */
+  allowUnattended?: boolean;
+};
+
+export type AuditEventType =
+  | 'capture.started'
+  | 'capture.completed'
+  | 'capture.denied'
+  | 'capture.cancelled'
+  | 'capture.expired'
+  | 'probe.completed'
+  | 'post.completed'
+  | 'execution.denied';
+
+/** Redacted lifecycle record. Session values and screenshots are never included. */
+export type AgentAuditEvent = {
+  type: AuditEventType;
+  at: string;
+  platform: PlatformId;
+  workspaceId?: string;
+  accountId?: string;
+  jobId?: string;
+  ok?: boolean;
+  reason?: string;
+  session?: { cookies: number; origins: number };
+};
+
+export type AuditSink = (
+  event: Readonly<AgentAuditEvent>
+) => void | Promise<void>;
+
+/**
  * Serialized browser session state for one user + platform. The source of
  * truth is the embedding application's encrypted store (treat it with
  * password-equivalent sensitivity and never expose it to end-user clients).
@@ -137,6 +185,11 @@ export interface WebPostStrategy {
   readonly platform: PlatformId;
   /** Sign-in page to open for interactive capture. */
   readonly loginUrl: string;
+  /**
+   * Execution and session boundary. New strategies should always declare a
+   * session scope; omission preserves compatibility for trusted legacy callers.
+   */
+  readonly policy?: StrategyPolicy;
   /** Quick probe: is this context still authenticated? */
   isAuthenticated(context: BrowserContext): Promise<boolean>;
   /**

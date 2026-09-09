@@ -23,6 +23,19 @@ flowchart TB
 - **service** — env-driven runner: chooses providers per job type, registers the caller's strategies, exposes typed handlers and the HTTP server; proxies Steel's live view.
 - **client / protocol** — the wire contract. Everything an orchestrator needs without pulling Playwright into its bundle.
 
+## Session and execution policy
+
+`WebPostStrategy.policy` can constrain both execution mode and serialized session
+scope. When `policy.session` is present, ABR filters cookies by allowed domain and
+local storage by exact origin before a provider sees the state and again before
+captured/refreshed state leaves the runtime. Empty and dangerously broad cookie
+scopes are rejected.
+
+`allowInteractiveCapture` and `allowUnattended` are independent. This supports,
+for example, an interactive-only strategy without implying that a captured
+session may be replayed unattended. Omitted policy fields preserve compatibility
+for trusted legacy strategies.
+
 ## Session lifecycle
 
 ```mermaid
@@ -31,13 +44,13 @@ sequenceDiagram
   participant A as Your app
   participant R as Runner
   participant B as Browser (Steel/Kernel/local)
-  A->>R: POST /v1/capture/start {platform}
+  A->>R: POST /v1/capture/start {workspaceId, accountId, platform}
   R->>B: acquire(interactive)
-  R-->>A: captureId, liveViewUrl
+  R-->>A: captureId, liveViewUrl with distinct token
   A->>U: iframe liveViewUrl
   U->>B: signs in
-  A->>R: POST /v1/capture/finish {captureId}
-  R->>B: isAuthenticated? exportState
+  A->>R: POST /v1/capture/finish {captureId, workspaceId, accountId}
+  R->>B: isAuthenticated? exportState and apply scope
   R-->>A: AgentSessionState
   A->>A: encrypt + persist
   Note over A,R: later, unattended
@@ -46,6 +59,20 @@ sequenceDiagram
   R-->>A: AgentPostResult + refreshedSession
   A->>A: persist refreshed session
 ```
+
+The management ID and live-view token are independent credentials. The live
+token resolves only the provider view; it cannot finish/cancel a capture or
+export state. Capture management succeeds only when the workspace/account
+binding matches the start request.
+
+## Audit lifecycle
+
+An optional `AuditSink` receives redacted capture, probe, posting, and
+execution-denial events. Events contain platform and tenant identifiers,
+timestamps, outcomes, and optionally cookie/origin counts. They never contain
+cookie values, local storage, bearer/live-view credentials, screenshots, or
+posted content. Sink failures are best-effort and do not expose or interrupt the
+browser operation.
 
 ## Verification model
 

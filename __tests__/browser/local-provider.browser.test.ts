@@ -31,6 +31,12 @@ const PAGE = `<!doctype html><html><body>
 const fixtureStrategy: WebPostStrategy = {
   platform: 'fixture',
   loginUrl: 'https://fixture.test/login',
+  policy: {
+    session: {
+      cookieDomains: ['fixture.test'],
+      origins: ['https://fixture.test'],
+    },
+  },
   validate: (c) => (c.text ? null : 'empty'),
   async isAuthenticated(context) {
     await context.route('https://fixture.test/**', (route) =>
@@ -82,6 +88,16 @@ describe.skipIf(!chromiumAvailable())(
                   secure: true,
                   sameSite: 'Lax',
                 },
+                {
+                  name: 'unrelated',
+                  value: 'must-not-enter-browser',
+                  domain: 'unrelated.test',
+                  path: '/',
+                  expires: -1,
+                  httpOnly: false,
+                  secure: true,
+                  sameSite: 'Lax',
+                },
               ],
               origins: [],
             },
@@ -107,6 +123,9 @@ describe.skipIf(!chromiumAvailable())(
       expect(
         refreshed?.storageState.cookies.find((c) => c.name === 'sid')?.value
       ).toBe('abc');
+      expect(
+        refreshed?.storageState.cookies.some((c) => c.name === 'unrelated')
+      ).toBe(false);
       const origin = refreshed?.storageState.origins.find(
         (o) => o.origin === 'https://fixture.test'
       );

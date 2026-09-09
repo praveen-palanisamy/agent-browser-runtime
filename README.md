@@ -22,7 +22,7 @@ It is the missing layer between "I have Playwright" and "I can run unattended, p
 | "Did the action actually happen?" | Strategies must verify; `uncertain` results are separated from failures so you never double-act |
 | Browser infra is painful | One `SessionProvider` contract over local Chromium, any CDP endpoint, self-hosted [Steel](https://github.com/steel-dev/steel-browser), or [Kernel](https://www.kernel.sh) microVMs |
 | Serverless can't run Chromium | An HTTP runner service + a Playwright-free client for functions, queues, and cron |
-| Users need to sign in somewhere safe | Interactive capture with an embeddable, proxied live view and unguessable, expiring capture ids |
+| Users need to sign in somewhere safe | Interactive capture with tenant binding and separate, expiring management/live-view credentials |
 
 No browser engine is reinvented here: the runtime orchestrates proven engines (Playwright, Steel, Kernel) and owns the parts they leave to you — session lifecycle, verification contracts, pacing, isolation per job, and a stable wire protocol.
 
@@ -78,6 +78,14 @@ import type { WebPostStrategy } from '@praveen-palanisamy/agent-browser-runtime'
 export const expensePortal: WebPostStrategy = {
   platform: 'expense-portal',
   loginUrl: 'https://expenses.corp.example/login',
+  policy: {
+    session: {
+      cookieDomains: ['expenses.corp.example'],
+      origins: ['https://expenses.corp.example'],
+    },
+    allowInteractiveCapture: true,
+    allowUnattended: true, // only when the portal terms and user authorization permit it
+  },
 
   validate: (c) =>
     !c.text ? 'Description required'
@@ -142,9 +150,13 @@ import { AgentRunnerClient } from '@praveen-palanisamy/agent-browser-runtime/cli
 const runner = new AgentRunnerClient({ baseUrl, token });
 
 // One-time: the employee signs in inside the live view you embed in your app.
-const { captureId, liveViewUrl } = await runner.captureStart({ platform: 'expense-portal' });
+const captureBinding = { workspaceId: orgId, accountId: userId };
+const { captureId, liveViewUrl } = await runner.captureStart({
+  ...captureBinding,
+  platform: 'expense-portal',
+});
 // ... show liveViewUrl in an iframe; the user completes login (and MFA) ...
-const done = await runner.captureFinish({ captureId });
+const done = await runner.captureFinish({ captureId, ...captureBinding });
 if (done.ok) await vault.save(userId, encrypt(done.state));   // your encrypted store
 
 // Monthly, unattended: file the report the assistant prepared.
@@ -183,6 +195,13 @@ await poster.post({ workspaceId, accountId, platform: 'expense-portal', content:
 | `SessionProvider` | Turn a stored state into a live `BrowserContext` | `LocalBrowserSessionProvider`, `CdpSessionProvider`, `SteelSessionProvider`, `KernelSessionProvider` |
 | `WebPostStrategy` | Drive one platform: `validate`, `isAuthenticated`, `post` | yours (`examples/demo-strategy`) |
 
+New strategies should declare `policy.session` with allowed cookie domains and
+exact local-storage origins. ABR applies that scope before injection and after
+capture/refresh, preventing unrelated browser credentials from crossing a
+strategy boundary. `allowInteractiveCapture` and `allowUnattended` make the
+permitted execution modes explicit. Omitted policy fields retain compatibility
+for trusted legacy strategies.
+
 `AgentPostResult` is deliberately rich: `ok`, `platformPostId/Url`, `verification: 'toast' | 'timeline'`, `needsReauth`, `uncertain`, `failureStage: 'precheck' | 'auth' | 'compose' | 'media' | 'submit' | 'verify'`, and an optional redacted `screenshotBase64` for your private artifact storage.
 
 ## Runner service
@@ -193,10 +212,13 @@ await poster.post({ workspaceId, accountId, platform: 'expense-portal', content:
 | `POST /v1/probe` | Cheap auth check; refreshes cookies |
 | `POST /v1/capture/start` | Open an interactive browser → `captureId`, `liveViewUrl`, `expiresAt` |
 | `POST /v1/capture/finish` · `/cancel` | Export the session / discard |
-| `GET /live/{captureId}/…` | Proxied Steel live view (HTTP + WebSocket, iframe-safe) |
+| `GET /live/{liveViewToken}/…` | Proxied Steel live view (HTTP + WebSocket, iframe-safe) |
 | `GET /healthz` | Liveness |
 
-All `/v1/*` routes require `Authorization: Bearer $AGENT_RUNNER_TOKEN`. Live-view paths are guarded by the unguessable capture id and TTL.
+All `/v1/*` routes require `Authorization: Bearer $AGENT_RUNNER_TOKEN`.
+Capture start/finish/cancel also carry the same `workspaceId` + `accountId`
+binding. The returned live-view URL uses a distinct unguessable credential that
+expires with the capture; it cannot finish, cancel, or export the session.
 
 Configuration is environment-driven ([`.env.example`](.env.example)). Job and capture providers are independent: run headless jobs in parallel on local Chromium while captures use Steel's live view, or route everything to Kernel for burst capacity. Steel OSS serves one session at a time; `SerializedProvider` queues instead of failing.
 
@@ -227,7 +249,12 @@ Pick the channel that fits your stack — all three are published from every rel
 
 - The runtime never persists sessions; your encrypted store is the source of truth. Steel/Kernel profiles are disposable caches.
 - Fresh browser context per job, disposed after use; no cross-tenant state.
-- Bearer-token auth on every API route; live view requires an active capture id and expires.
+- Session policy removes cookies/origins outside a strategy's allowlist on import
+  and export.
+- Bearer-token auth protects management APIs; a separate expiring credential
+  protects each live view.
+- Optional lifecycle audit events contain identifiers, outcomes, and session
+  counts—never cookie/storage values or screenshots.
 - Failure screenshots are returned to the caller for private storage — never served to end users by the runtime.
 - Treat `AgentSessionState` with password-equivalent sensitivity. See [`SECURITY.md`](SECURITY.md).
 

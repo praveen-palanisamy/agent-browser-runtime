@@ -48,7 +48,10 @@ The same shape works on ECS/Fargate task definitions or a Nomad group.
 ## Scaling beyond one instance
 
 - Move captures to **Kernel** (`AGENT_RUNNER_CAPTURE_PROVIDER=kernel`): each capture gets its own microVM with a live view URL, so instances become interchangeable.
-- Or run several runner instances and route `/v1/capture/finish|cancel` and `/live/{captureId}` by capture id (hash or header) at the load balancer.
+- Or run several runner instances with sticky capture routing or an external
+  registry that maps both the management ID and the distinct live-view token to
+  the owning instance. The two credentials intentionally cannot be correlated
+  by clients.
 
 ## Ways to consume ABR
 

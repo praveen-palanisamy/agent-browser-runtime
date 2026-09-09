@@ -8,6 +8,14 @@
 const demoStrategy = {
   platform: 'demo',
   loginUrl: 'https://example.com/',
+  policy: {
+    session: {
+      cookieDomains: ['example.com'],
+      origins: ['https://example.com'],
+    },
+    allowInteractiveCapture: true,
+    allowUnattended: true,
+  },
 
   validate(content) {
     if (!content.text?.trim()) return 'Text is required';

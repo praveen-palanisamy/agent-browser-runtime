@@ -15,6 +15,12 @@ export {
 } from './client/runner-client';
 export { SessionCaptureManager } from './core/capture';
 export { AgentPoster, humanPacingDelay } from './core/poster';
+export {
+  assertStrategyMode,
+  sanitizeSessionState,
+  sanitizeStorageState,
+  validateSessionScope,
+} from './core/session-policy';
 export { InMemorySessionStore } from './core/stores';
 export * from './core/types';
 export type { PlatformId } from './platform';
