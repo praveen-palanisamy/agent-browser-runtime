@@ -67,6 +67,8 @@ export type RunnerProbeResponse = {
 };
 
 export type RunnerCaptureStartRequest = {
+  workspaceId: string;
+  accountId: string;
   platform: PlatformId;
   userAgent?: string;
 };
@@ -78,7 +80,11 @@ export type RunnerCaptureStartResponse = {
   expiresAt: string;
 };
 
-export type RunnerCaptureFinishRequest = { captureId: string };
+export type RunnerCaptureFinishRequest = {
+  captureId: string;
+  workspaceId: string;
+  accountId: string;
+};
 
 export type RunnerCaptureFinishResponse =
   | { ok: true; state: AgentSessionState }

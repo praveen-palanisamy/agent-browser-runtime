@@ -79,7 +79,8 @@ function requireFields(body: Record<string, unknown>, fields: string[]): void {
 export function createRunnerServer(runner: AgentRunner): Server {
   const { config } = runner;
   const liveDeps = {
-    resolve: (captureId: string) => runner.capture.liveViewUrlFor(captureId),
+    resolve: (liveViewToken: string) =>
+      runner.capture.liveViewUrlFor(liveViewToken),
     publicUrl: config.publicUrl,
     livePrefix: RUNNER_ROUTES.live,
   };
@@ -134,15 +135,15 @@ export function createRunnerServer(runner: AgentRunner): Server {
           json(res, 200, await runner.probe(body as never));
           return;
         case RUNNER_ROUTES.captureStart:
-          requireFields(body, ['platform']);
+          requireFields(body, ['workspaceId', 'accountId', 'platform']);
           json(res, 200, await runner.captureStart(body as never));
           return;
         case RUNNER_ROUTES.captureFinish:
-          requireFields(body, ['captureId']);
+          requireFields(body, ['captureId', 'workspaceId', 'accountId']);
           json(res, 200, await runner.captureFinish(body as never));
           return;
         case RUNNER_ROUTES.captureCancel:
-          requireFields(body, ['captureId']);
+          requireFields(body, ['captureId', 'workspaceId', 'accountId']);
           json(res, 200, await runner.captureCancel(body as never));
           return;
         default:

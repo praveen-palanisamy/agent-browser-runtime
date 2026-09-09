@@ -83,6 +83,12 @@ function demoStrategy(authenticated = true): WebPostStrategy {
   return {
     platform: 'demo',
     loginUrl: 'https://demo.test/login',
+    policy: {
+      session: {
+        cookieDomains: ['demo.test'],
+        origins: ['https://demo.test'],
+      },
+    },
     validate: (c) => (c.text ? null : 'empty'),
     isAuthenticated: async () => authenticated,
     post: async (_ctx, content) => ({
@@ -178,14 +184,32 @@ describe('AgentRunner end-to-end (fake provider, no browser)', () => {
       [demoStrategy(true)],
       () => cap.provider
     );
-    const started = await runner.captureStart({ platform: 'demo' });
-    expect(started.liveViewUrl).toBe(
-      `https://runner.test/live/${started.captureId}/`
+    const binding = { workspaceId: 'ws', accountId: 'a1' };
+    const started = await runner.captureStart({
+      platform: 'demo',
+      ...binding,
+    });
+    expect(started.liveViewUrl).toMatch(
+      /^https:\/\/runner\.test\/live\/[^/]+\/$/
     );
+    expect(started.liveViewUrl).not.toContain(started.captureId);
+    const liveViewToken = new URL(started.liveViewUrl).pathname.split('/')[2];
+    expect(runner.capture.liveViewUrlFor(liveViewToken)).toBe(
+      'http://steel:3000/v1/sessions/debug'
+    );
+    expect(runner.capture.liveViewUrlFor(started.captureId)).toBeUndefined();
     expect(cap.calls[0].interactive).toBe(true);
+
+    const wrongOwner = await runner.captureFinish({
+      captureId: started.captureId,
+      workspaceId: 'other',
+      accountId: 'a1',
+    });
+    expect(wrongOwner.ok).toBe(false);
 
     const finished = await runner.captureFinish({
       captureId: started.captureId,
+      ...binding,
     });
     expect(finished.ok).toBe(true);
     if (finished.ok) {
@@ -194,6 +218,61 @@ describe('AgentRunner end-to-end (fake provider, no browser)', () => {
     }
     expect(cap.disposed()).toBe(1);
     await runner.shutdown();
+  });
+
+  it('keeps an unauthenticated capture open for the user to finish login', async () => {
+    const cap = fakeProvider({
+      liveViewUrl: 'http://steel:3000/v1/sessions/debug',
+    });
+    const runner = new AgentRunner(
+      config(),
+      [demoStrategy(false)],
+      () => cap.provider
+    );
+    const binding = { workspaceId: 'ws', accountId: 'a1' };
+    const started = await runner.captureStart({
+      platform: 'demo',
+      ...binding,
+    });
+    const result = await runner.captureFinish({
+      captureId: started.captureId,
+      ...binding,
+    });
+    expect(result).toMatchObject({ ok: false, notAuthenticated: true });
+    expect(runner.capture.size).toBe(1);
+    expect(cap.disposed()).toBe(0);
+    await runner.shutdown();
+    expect(cap.disposed()).toBe(1);
+  });
+
+  it('emits redacted lifecycle audit events', async () => {
+    const events: Array<Record<string, unknown>> = [];
+    const { provider } = fakeProvider({ exportedCookie: 'v2' });
+    const runner = new AgentRunner(
+      config(),
+      [demoStrategy()],
+      () => provider,
+      (event) => events.push(event)
+    );
+    await runner.post({
+      workspaceId: 'ws',
+      accountId: 'a1',
+      platform: 'demo',
+      jobId: 'job-audit',
+      session: session(),
+      content: { text: 'audited' },
+    });
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: 'post.completed',
+        workspaceId: 'ws',
+        accountId: 'a1',
+        jobId: 'job-audit',
+        ok: true,
+      })
+    );
+    expect(JSON.stringify(events)).not.toContain('"value"');
+    expect(JSON.stringify(events)).not.toContain('v2');
   });
 
   it('serves the full protocol over HTTP for the client', async () => {

@@ -13,15 +13,24 @@
 
 import { randomBytes } from 'node:crypto';
 import type { PlatformId } from '../platform';
+import {
+  assertStrategyMode,
+  sanitizeStorageState,
+  validateSessionScope,
+} from './session-policy';
 import type {
+  AgentAuditEvent,
   AgentSessionHandle,
   AgentSessionState,
+  AuditSink,
   SessionProvider,
   WebPostStrategy,
 } from './types';
 
 export type CaptureStart = {
   captureId: string;
+  /** Distinct credential used only by the live-view proxy. */
+  liveViewToken: string;
   /** Provider live view URL (absolute). Undefined for headless providers. */
   liveViewUrl?: string;
   expiresAt: string; // ISO
@@ -33,6 +42,9 @@ export type CaptureFinish =
 
 type ActiveCapture = {
   platform: PlatformId;
+  workspaceId: string;
+  accountId: string;
+  liveViewToken: string;
   handle: AgentSessionHandle;
   expiresAt: number;
   timer: NodeJS.Timeout;
@@ -40,14 +52,18 @@ type ActiveCapture = {
 
 export class SessionCaptureManager {
   private active = new Map<string, ActiveCapture>();
+  private liveViewTokens = new Map<string, string>();
   private strategies = new Map<PlatformId, WebPostStrategy>();
 
   constructor(
     private provider: SessionProvider,
-    private opts: { ttlMs?: number } = {}
+    private opts: { ttlMs?: number; audit?: AuditSink } = {}
   ) {}
 
   register(strategy: WebPostStrategy): this {
+    if (strategy.policy?.session) {
+      validateSessionScope(strategy.policy.session);
+    }
     this.strategies.set(strategy.platform, strategy);
     return this;
   }
@@ -58,11 +74,28 @@ export class SessionCaptureManager {
 
   async start(input: {
     platform: PlatformId;
+    workspaceId: string;
+    accountId: string;
     userAgent?: string;
   }): Promise<CaptureStart> {
     const strategy = this.strategies.get(input.platform);
     if (!strategy) {
       throw new Error(`No agentic strategy registered for ${input.platform}`);
+    }
+    try {
+      assertStrategyMode(strategy, 'interactive');
+    } catch (error) {
+      const reason =
+        error instanceof Error ? error.message : 'Interactive capture denied';
+      await this.emitAudit({
+        type: 'capture.denied',
+        at: new Date().toISOString(),
+        platform: input.platform,
+        workspaceId: input.workspaceId,
+        accountId: input.accountId,
+        reason,
+      });
+      throw error;
     }
     const handle = await this.provider.acquire({
       platform: input.platform,
@@ -82,50 +115,76 @@ export class SessionCaptureManager {
       .catch(() => undefined);
 
     const captureId = randomBytes(24).toString('base64url');
+    const liveViewToken = randomBytes(24).toString('base64url');
     const ttl = this.opts.ttlMs ?? 20 * 60_000;
     const expiresAt = Date.now() + ttl;
     const timer = setTimeout(() => {
-      this.cancel(captureId).catch(() => undefined);
+      this.expire(captureId).catch(() => undefined);
     }, ttl);
     this.active.set(captureId, {
       platform: input.platform,
+      workspaceId: input.workspaceId,
+      accountId: input.accountId,
+      liveViewToken,
       handle,
       expiresAt,
       timer,
     });
+    this.liveViewTokens.set(liveViewToken, captureId);
+    await this.emitAudit({
+      type: 'capture.started',
+      at: new Date().toISOString(),
+      platform: input.platform,
+      workspaceId: input.workspaceId,
+      accountId: input.accountId,
+    });
     return {
       captureId,
+      liveViewToken,
       liveViewUrl: handle.liveViewUrl,
       expiresAt: new Date(expiresAt).toISOString(),
     };
   }
 
   /** Probe auth and export cookies; always releases the browser. */
-  async finish(captureId: string): Promise<CaptureFinish> {
-    const entry = this.active.get(captureId);
+  async finish(input: {
+    captureId: string;
+    workspaceId: string;
+    accountId: string;
+  }): Promise<CaptureFinish> {
+    const entry = this.boundEntry(input);
     if (!entry) {
       return { ok: false, error: 'Capture not found or expired' };
     }
-    this.active.delete(captureId);
-    clearTimeout(entry.timer);
     const strategy = this.strategies.get(entry.platform);
+    if (!strategy || !(await strategy.isAuthenticated(entry.handle.context))) {
+      await this.emitAudit({
+        type: 'capture.completed',
+        at: new Date().toISOString(),
+        platform: entry.platform,
+        workspaceId: entry.workspaceId,
+        accountId: entry.accountId,
+        ok: false,
+        reason: 'not_authenticated',
+      });
+      return {
+        ok: false,
+        notAuthenticated: true,
+        error: 'Sign-in not detected yet — finish signing in and try again',
+      };
+    }
+    this.remove(input.captureId, entry);
+    clearTimeout(entry.timer);
     try {
-      if (
-        !strategy ||
-        !(await strategy.isAuthenticated(entry.handle.context))
-      ) {
-        return {
-          ok: false,
-          notAuthenticated: true,
-          error: 'Sign-in not detected yet — finish signing in and try again',
-        };
-      }
-      const storageState = await entry.handle.exportState();
+      const exported = await entry.handle.exportState();
+      const storageState = strategy.policy?.session
+        ? sanitizeStorageState(exported, strategy.policy.session)
+        : exported;
       const authCookieExpiry = storageState.cookies
         .map((c) => c.expires)
         .filter((e) => e > 0)
         .sort((a, b) => a - b)[0];
-      return {
+      const result: CaptureFinish = {
         ok: true,
         state: {
           platform: entry.platform,
@@ -136,27 +195,100 @@ export class SessionCaptureManager {
             : undefined,
         },
       };
+      await this.emitAudit({
+        type: 'capture.completed',
+        at: new Date().toISOString(),
+        platform: entry.platform,
+        workspaceId: entry.workspaceId,
+        accountId: entry.accountId,
+        ok: true,
+        session: {
+          cookies: storageState.cookies.length,
+          origins: storageState.origins.length,
+        },
+      });
+      return result;
     } finally {
       await entry.handle.dispose();
     }
   }
 
-  async cancel(captureId: string): Promise<void> {
+  async cancel(input: {
+    captureId: string;
+    workspaceId: string;
+    accountId: string;
+  }): Promise<void> {
+    const entry = this.boundEntry(input);
+    if (!entry) {
+      return;
+    }
+    this.remove(input.captureId, entry);
+    clearTimeout(entry.timer);
+    await entry.handle.dispose();
+    await this.emitAudit({
+      type: 'capture.cancelled',
+      at: new Date().toISOString(),
+      platform: entry.platform,
+      workspaceId: entry.workspaceId,
+      accountId: entry.accountId,
+    });
+  }
+
+  /** Live view URL for an active capture (used by the runner's proxy). */
+  liveViewUrlFor(liveViewToken: string): string | undefined {
+    const captureId = this.liveViewTokens.get(liveViewToken);
+    return captureId
+      ? this.active.get(captureId)?.handle.liveViewUrl
+      : undefined;
+  }
+
+  async disposeAll(): Promise<void> {
+    await Promise.all(
+      [...this.active.entries()].map(([captureId, entry]) =>
+        this.cancel({
+          captureId,
+          workspaceId: entry.workspaceId,
+          accountId: entry.accountId,
+        })
+      )
+    );
+  }
+
+  private boundEntry(input: {
+    captureId: string;
+    workspaceId: string;
+    accountId: string;
+  }): ActiveCapture | undefined {
+    const entry = this.active.get(input.captureId);
+    return entry?.workspaceId === input.workspaceId &&
+      entry.accountId === input.accountId
+      ? entry
+      : undefined;
+  }
+
+  private remove(captureId: string, entry: ActiveCapture): void {
+    this.active.delete(captureId);
+    this.liveViewTokens.delete(entry.liveViewToken);
+  }
+
+  private async expire(captureId: string): Promise<void> {
     const entry = this.active.get(captureId);
     if (!entry) {
       return;
     }
-    this.active.delete(captureId);
+    this.remove(captureId, entry);
     clearTimeout(entry.timer);
     await entry.handle.dispose();
+    await this.emitAudit({
+      type: 'capture.expired',
+      at: new Date().toISOString(),
+      platform: entry.platform,
+      workspaceId: entry.workspaceId,
+      accountId: entry.accountId,
+    });
   }
 
-  /** Live view URL for an active capture (used by the runner's proxy). */
-  liveViewUrlFor(captureId: string): string | undefined {
-    return this.active.get(captureId)?.handle.liveViewUrl;
-  }
-
-  async disposeAll(): Promise<void> {
-    await Promise.all([...this.active.keys()].map((id) => this.cancel(id)));
+  private async emitAudit(event: AgentAuditEvent): Promise<void> {
+    await Promise.resolve(this.opts.audit?.(event)).catch(() => undefined);
   }
 }

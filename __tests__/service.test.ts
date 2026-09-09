@@ -29,10 +29,15 @@ function fakeRunner(): AgentRunner {
     async probe() {
       return { authenticated: true };
     },
-    async captureStart() {
+    async captureStart(req: {
+      workspaceId: string;
+      accountId: string;
+      platform: string;
+    }) {
+      calls.push(`capture:${req.workspaceId}:${req.accountId}:${req.platform}`);
       return {
         captureId: 'c1',
-        liveViewUrl: 'https://runner.example/live/c1/',
+        liveViewUrl: 'https://runner.example/live/view-token/',
         expiresAt: 'x',
       };
     },
@@ -163,6 +168,27 @@ describe('runner HTTP server + client', () => {
         e.status === 400 &&
         /workspaceId/.test(e.message)
     );
+    await expect(
+      ok.captureStart({ platform: 'demo' } as never)
+    ).rejects.toSatisfy(
+      (e: unknown) =>
+        e instanceof AgentRunnerError &&
+        e.status === 400 &&
+        /workspaceId/.test(e.message)
+    );
+  });
+
+  it('requires and forwards the capture tenant binding', async () => {
+    const client = new AgentRunnerClient({ baseUrl, token: TOKEN });
+    const result = await client.captureStart({
+      workspaceId: 'ws',
+      accountId: 'a',
+      platform: 'demo',
+    });
+    expect(result.liveViewUrl).toBe('https://runner.example/live/view-token/');
+    expect((runner as unknown as { calls: string[] }).calls).toContain(
+      'capture:ws:a:demo'
+    );
   });
 
   it('routes an authenticated post to the runner', async () => {
@@ -180,9 +206,9 @@ describe('runner HTTP server + client', () => {
       },
     });
     expect(res).toMatchObject({ ok: true, platformPostId: '1' });
-    expect((runner as unknown as { calls: string[] }).calls).toEqual([
-      'post:ws/p#0',
-    ]);
+    expect((runner as unknown as { calls: string[] }).calls).toContain(
+      'post:ws/p#0'
+    );
   });
 
   it('returns 404 for unknown live captures', async () => {

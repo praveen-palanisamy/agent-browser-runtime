@@ -8,7 +8,8 @@ A runtime that lets software act inside a user's authenticated browser session, 
 
 ## When to reach for it
 
-- You need to perform actions on a website **as a specific user** and there is no API, the API is metered, or the API lacks the capability.
+- You need to perform actions on a website **as a specific user**, the site terms
+  explicitly permit browser automation, and no supported API covers the action.
 - The action must run **later** (cron, queue) without the user present.
 - You need a **safe outcome model**: confirmed / uncertain / needs re-auth, so you never double-act.
 
@@ -16,12 +17,22 @@ A runtime that lets software act inside a user's authenticated browser session, 
 
 - Scraping public pages (use a plain headless browser).
 - Anything that violates the target site's terms or acts without the user's explicit instruction.
+- Using a browser because an official API is metered, gated, or awaiting review;
+  cost and access friction do not authorize UI automation.
+- Billing, security challenges, identity checks, legal attestations, or exporting
+  a session to another person/agent.
 
 ## Integration recipe
 
-1. **Implement a `WebPostStrategy`** for the target site: `validate(content)`, `isAuthenticated(ctx)`, `post(ctx, content)`. Verify inside `post` (read back the UI or find the permalink); return `uncertain: true` if you submitted but could not confirm.
+1. **Implement a `WebPostStrategy`** for the target site: declare a narrow
+   `policy.session`, permitted execution modes, `validate(content)`,
+   `isAuthenticated(ctx)`, and `post(ctx, content)`. Verify inside `post` (read
+   back the UI or find the permalink); return `uncertain: true` if you submitted
+   but could not confirm.
 2. **Run the service**: `startRunner({ strategies })` or `agent-browser-runtime serve --strategies ./strategies.js` with `AGENT_RUNNER_TOKEN`.
-3. **Capture once**: `captureStart` → embed `liveViewUrl` → user signs in → `captureFinish` → encrypt and store `state`.
+3. **Capture once**: `captureStart` with `workspaceId` + `accountId` → embed the
+   short-lived `liveViewUrl` → user signs in → `captureFinish` with the same
+   binding → encrypt and store `state`.
 4. **Act unattended**: `post` / `probe` with the decrypted session; persist `refreshedSession`; honour `needsReauth` and `uncertain`.
 
 ## Public API surface (stable)

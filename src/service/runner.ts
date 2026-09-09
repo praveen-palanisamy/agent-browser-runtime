@@ -13,7 +13,11 @@
 import { SessionCaptureManager } from '../core/capture';
 import { AgentPoster } from '../core/poster';
 import { InMemorySessionStore } from '../core/stores';
-import type { SessionProvider, WebPostStrategy } from '../core/types';
+import type {
+  AuditSink,
+  SessionProvider,
+  WebPostStrategy,
+} from '../core/types';
 import type {
   RunnerCaptureFinishRequest,
   RunnerCaptureFinishResponse,
@@ -72,7 +76,8 @@ export class AgentRunner {
   constructor(
     readonly config: RunnerConfig,
     strategies: WebPostStrategy[],
-    providerFactory: ProviderFactory = defaultProviderFactory(config)
+    providerFactory: ProviderFactory = defaultProviderFactory(config),
+    audit?: AuditSink
   ) {
     if (strategies.length === 0) {
       throw new Error('AgentRunner requires at least one WebPostStrategy');
@@ -85,15 +90,20 @@ export class AgentRunner {
         : providerFactory(config.captureProvider);
     this.capture = new SessionCaptureManager(this.captureProvider, {
       ttlMs: config.captureTtlMs,
+      audit,
     });
+    this.audit = audit;
     for (const s of strategies) {
       this.capture.register(s);
     }
   }
 
+  private readonly audit?: AuditSink;
+
   private poster(store: InMemorySessionStore): AgentPoster {
     const poster = new AgentPoster(this.jobProvider, store, {
       pacing: this.config.pacing,
+      audit: this.audit,
     });
     for (const s of this.strategies) {
       poster.register(s);
@@ -110,6 +120,7 @@ export class AgentRunner {
       platform: req.platform,
       content: req.content,
       accountHandle: req.accountHandle,
+      jobId: req.jobId,
     });
     const refreshed = store.peek(key);
     return {
@@ -143,11 +154,13 @@ export class AgentRunner {
   ): Promise<RunnerCaptureStartResponse> {
     const started = await this.capture.start({
       platform: req.platform,
+      workspaceId: req.workspaceId,
+      accountId: req.accountId,
       userAgent: req.userAgent,
     });
     return {
       captureId: started.captureId,
-      liveViewUrl: `${this.config.publicUrl}${RUNNER_ROUTES.live}/${started.captureId}/`,
+      liveViewUrl: `${this.config.publicUrl}${RUNNER_ROUTES.live}/${started.liveViewToken}/`,
       expiresAt: started.expiresAt,
     };
   }
@@ -155,11 +168,11 @@ export class AgentRunner {
   captureFinish(
     req: RunnerCaptureFinishRequest
   ): Promise<RunnerCaptureFinishResponse> {
-    return this.capture.finish(req.captureId);
+    return this.capture.finish(req);
   }
 
   async captureCancel(req: RunnerCaptureFinishRequest): Promise<{ ok: true }> {
-    await this.capture.cancel(req.captureId);
+    await this.capture.cancel(req);
     return { ok: true };
   }
 
