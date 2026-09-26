@@ -86,11 +86,13 @@ gcloud auth print-access-token | \
 
 ### CPU quota (important)
 
-An always-on sidecar pair (`minScale=1`, 2 CPU runner + 2 CPU Steel ≈ **4 reserved CPUs**) counts against regional Cloud Run CPU quota alongside every Gen2 Cloud Function. That often blocks `firebase deploy --only functions` with:
+An always-on sidecar pair (`minScale=1`, 2 CPU runner + 2 CPU Steel ≈ **4 reserved CPUs**) counts against regional Cloud Run CPU quota alongside every Gen2 Cloud Function **in the same GCP project**. That often blocks `firebase deploy --only functions` with:
 
 `Quota exceeded for total allowable CPU per project per region`.
 
-**Economical default:** keep the agent runner at `minScale=0` (or delete the service) until Social Executor capture is needed; run headless posts/probes only when the service is scaled up. Prefer requesting a quota increase only after product traffic justifies it.
+**Recommended:** host ABR in a **dedicated GCP project** (separate 20 vCPU regional pool). Orchestrators (e.g. Firebase Functions in another project) only need `AGENT_RUNNER_URL` + a shared `AGENT_RUNNER_TOKEN`. Peak need for one warm instance with the slim template (1+1 CPU, `minScale=0`) is **~2 vCPU** — one interactive Steel OSS capture at a time.
+
+**Economical default:** keep the agent runner at `minScale=0` (or delete the service) until capture is needed; run headless posts/probes only when the service is scaled up. Prefer requesting a quota increase only after product traffic justifies it.
 
 To free quota quickly:
 
@@ -100,6 +102,23 @@ gcloud run services delete SERVICE_NAME --region=REGION --quiet
 # (host app) npm run cleanup:cloudrun-revisions
 ```
 
+### Dedicated project layout (portable)
+
+```mermaid
+flowchart LR
+  subgraph studio [App / Functions project]
+    Fn[Orchestrator]
+  end
+  subgraph abr [ABR project]
+    Runner[Cloud Run ABR + Steel]
+    AR[Artifact Registry]
+  end
+  Fn -->|Bearer AGENT_RUNNER_TOKEN| Runner
+```
+
+Images, Secret Manager (`AGENT_RUNNER_TOKEN`), and Cloud Run live in the ABR project. The app project only stores the public URL and the same token value. Swap hosts later (Fly/Railway/GCE) by changing URL + DNS — protocol stays `GET /v1/healthz` and bearer-protected `/v1/*`.
+
+Optional providers (Infisical path `/abr` for agents): `STEEL_API_KEY` (Steel Cloud), `KERNEL_API_KEY` / `KERNEL_API_URL` (Kernel microVMs when `AGENT_RUNNER_*_PROVIDER=kernel`).
 ### Smoke test
 
 ```bash
